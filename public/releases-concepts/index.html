@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quetzal — Releases UX Concepts (A–E)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Quetzal DS tokens ── */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #e8edf4;
+  --layer-hover: #eef2f7;
+  --border: #e5e7eb;
+  --border-strong: #c4cad3;
+  --text: #0f172a;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --accent-soft: rgba(37, 99, 235, 0.12);
+  --plume: #3b82f6;
+  --ok: #059669;
+  --warn: #d97706;
+  --error: #dc2626;
+  --info: #2563eb;
+  --today: #dc2626;
+  --today-soft: rgba(220, 38, 38, 0.08);
+  --radius: 0;
+  --font: "JetBrains Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  background:
+    radial-gradient(1100px 480px at 10% -12%, rgba(37,99,235,0.08), transparent 55%),
+    radial-gradient(800px 420px at 96% 0%, rgba(59,130,246,0.05), transparent 50%),
+    var(--bg);
+  letter-spacing: -0.01em;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Page shell ── */
+.page-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+.page-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Quick nav ── */
+.quick-nav {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.quick-nav a {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  border-right: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.quick-nav a:last-child { border-right: 0; }
+.quick-nav a:hover { background: var(--layer-hover); text-decoration: none; }
+.quick-nav .letter {
+  display: inline-block;
+  width: 1.35em;
+  height: 1.35em;
+  line-height: 1.35em;
+  text-align: center;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  margin-right: 0.35rem;
+}
+
+/* ── Concept section ── */
+.concept {
+  margin-bottom: 2.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.concept-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.concept-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  font-size: 15px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  flex-shrink: 0;
+}
+.concept-head h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.concept-head .thesis {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+  max-width: 46%;
+  text-align: right;
+}
+.concept-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.concept-meta div {
+  padding: 0.55rem 1rem;
+  font-size: 12px;
+}
+.concept-meta div:first-child {
+  border-right: 1px solid var(--border);
+}
+.concept-meta strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+.concept-mock {
+  padding: 1rem;
+  background: var(--bg);
+  min-height: 300px;
+  overflow-x: auto;
+}
+
+/* ── Comparison table ── */
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+.cmp-table th, .cmp-table td {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.cmp-table th {
+  background: var(--surface-2);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.cmp-table td:first-child {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Tag helpers ── */
+.tag { display: inline-block; padding: 0.1rem 0.4rem; font-size: 10px; font-weight: 500; }
+.tag--epic { background: #eef2ff; color: #3b5998; }
+.tag--story { background: #ecfdf5; color: #059669; }
+.tag--task { background: var(--surface-2); color: var(--muted); }
+.tag--bug { background: #fef2f2; color: #dc2626; }
+.tag--ticket { background: #fff7ed; color: #c2410c; }
+.tag--todo { background: var(--surface-2); color: var(--muted); }
+.tag--ip { background: #dbeafe; color: #1d4ed8; }
+.tag--done { background: #d1fae5; color: #059669; }
+.tag--review { background: #fef3c7; color: #92400e; }
+.tag--high { color: #dc2626; }
+.tag--med { color: var(--warn); }
+.tag--low { color: var(--faint); }
+.tag--released { background: #d1fae5; color: #065f46; }
+.tag--unreleased { background: #fef3c7; color: #92400e; }
+.tag--planned { background: var(--surface-2); color: var(--muted); }
+.tag--cmp { background: #e0ecff; color: #1d4ed8; padding: 0.05rem 0.35rem; }
+.tag--cmp-reg { background: #fde8d4; color: #c2410c; }
+
+/* ──────────────────────────────────────────────
+   SHARED — Toolbar strip in mocks
+   ────────────────────────────────────────────── */
+.mock-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  background: var(--surface);
+  font-size: 11px;
+}
+.mock-toolbar .seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+}
+.mock-toolbar .seg button {
+  background: var(--surface);
+  border: 0;
+  border-right: 1px solid var(--border);
+  padding: 0.25rem 0.55rem;
+  font: inherit;
+  font-size: 11px;
+  cursor: default;
+  color: var(--text);
+}
+.mock-toolbar .seg button:last-child { border-right: 0; }
+.mock-toolbar .seg button.is-on {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.mock-toolbar .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+.mock-toolbar .chip.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.mock-toolbar .spacer { flex: 1; }
+.mock-toolbar .btn {
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 11px;
+}
+.mock-toolbar .btn--primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT A — Release Calendar
+   ────────────────────────────────────────────── */
+.rc-shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.rc-side {
+  border-right: 1px solid var(--border);
+  padding: 0.65rem;
+}
+.rc-side h4 {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0.5rem 0 0.35rem;
+}
+.rc-side h4:first-child { margin-top: 0; }
+.rc-side-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0;
+  font-size: 11px;
+  cursor: default;
+}
+.rc-side-item .dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  background: var(--accent);
+}
+.rc-side-item .dot.released { background: var(--ok); }
+.rc-side-item .dot.unreleased { background: var(--warn); }
+.rc-side-item .dot.planned { background: var(--faint); }
+.rc-side-item .label { flex: 1; }
+.rc-side-item .date { color: var(--muted); font-size: 10px; }
+
+.rc-cal {
+  min-width: 0;
+}
+.rc-cal-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.rc-cal-head .title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.rc-cal-head .nav {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.rc-cal-head .nav button {
+  border: 0;
+  background: var(--surface);
+  padding: 0.15rem 0.5rem;
+  font: inherit;
+  border-right: 1px solid var(--border);
+  cursor: default;
+}
+.rc-cal-head .nav button:last-child { border-right: 0; }
+.rc-cal-head .today-btn {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 11px;
+}
+.rc-cal-head .today-btn.is-on {
+  background: var(--today);
+  color: #fff;
+  border-color: var(--today);
+  font-weight: 600;
+}
+
+.rc-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--border);
+  gap: 1px;
+}
+.rc-dow {
+  padding: 0.25rem 0.4rem;
+  background: var(--surface-2);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-align: left;
+}
+.rc-day {
+  min-height: 72px;
+  background: var(--surface);
+  padding: 0.3rem 0.35rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow: hidden;
+}
+.rc-day.is-outside { background: #fafbfc; color: var(--faint); }
+.rc-day .num {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.rc-day.is-outside .num { color: var(--faint); }
+.rc-day.is-today {
+  background: var(--today-soft);
+}
+.rc-day.is-today .num {
+  color: var(--today);
+  font-weight: 700;
+}
+.rc-day.is-today::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 2px var(--today);
+}
+.rc-pill {
+  font-size: 10px;
+  padding: 0.1rem 0.3rem;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+.rc-pill.released { background: var(--ok); }
+.rc-pill.unreleased { background: var(--warn); color: #3f2d05; }
+.rc-pill.planned { background: var(--faint); }
+.rc-pill .count {
+  margin-left: 0.3rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+/* Mini "today's releases" strip above calendar */
+.rc-today-strip {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+}
+.rc-today-strip .label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.rc-today-strip .ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--today);
+  color: var(--today);
+  font-weight: 600;
+  font-size: 11px;
+  background: var(--today-soft);
+}
+.rc-today-strip .ver .count {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 10px;
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT B — Version Train Timeline
+   ────────────────────────────────────────────── */
+.tt-shell {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.tt-axis {
+  display: grid;
+  grid-template-columns: 160px repeat(6, 1fr);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.tt-axis > div {
+  padding: 0.4rem 0.6rem;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border-right: 1px solid var(--border);
+}
+.tt-axis > div:last-child { border-right: 0; }
+.tt-axis > div:first-child { background: var(--surface-2); }
+
+.tt-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.tt-row:last-child { border-bottom: 0; }
+.tt-row-label {
+  padding: 0.6rem 0.6rem;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 11px;
+  background: var(--surface);
+}
+.tt-row-label .cmp-name {
+  font-weight: 600;
+  font-size: 12px;
+}
+.tt-row-label .cmp-meta {
+  color: var(--muted);
+  font-size: 10px;
+}
+.tt-track {
+  position: relative;
+  height: 76px;
+  background:
+    linear-gradient(90deg, transparent calc(100%/6 - 1px), var(--border) calc(100%/6 - 1px), var(--border) calc(100%/6), transparent calc(100%/6)),
+    linear-gradient(90deg, transparent calc(2*100%/6 - 1px), var(--border) calc(2*100%/6 - 1px), var(--border) calc(2*100%/6), transparent calc(2*100%/6)),
+    linear-gradient(90deg, transparent calc(3*100%/6 - 1px), var(--border) calc(3*100%/6 - 1px), var(--border) calc(3*100%/6), transparent calc(3*100%/6)),
+    linear-gradient(90deg, transparent calc(4*100%/6 - 1px), var(--border) calc(4*100%/6 - 1px), var(--border) calc(4*100%/6), transparent calc(4*100%/6)),
+    linear-gradient(90deg, transparent calc(5*100%/6 - 1px), var(--border) calc(5*100%/6 - 1px), var(--border) calc(5*100%/6), transparent calc(5*100%/6));
+}
+.tt-today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--today);
+  z-index: 2;
+}
+.tt-today-flag {
+  position: absolute;
+  top: -2px;
+  transform: translateX(-50%);
+  background: var(--today);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  z-index: 3;
+}
+.tt-marker {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: default;
+}
+.tt-marker .diamond {
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.tt-marker.unreleased .diamond { background: var(--warn); }
+.tt-marker.planned .diamond { background: var(--faint); }
+.tt-marker .vlabel {
+  margin-top: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.tt-marker .vdate {
+  font-size: 9px;
+  color: var(--muted);
+}
+.tt-marker.unreleased .vlabel { color: var(--warn); }
+.tt-slip {
+  position: absolute;
+  top: 10px;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg, var(--error) 0 4px, transparent 4px 8px
+  );
+  z-index: 1;
+}
+.tt-ghost {
+  position: absolute;
+  top: 10px;
+  height: 2px;
+  background: var(--border-strong);
+  z-index: 1;
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT C — Version Detail / Ship Readiness
+   ────────────────────────────────────────────── */
+.sr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+.sr-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+.sr-card.is-focus { border: 2px solid var(--accent); }
+.sr-head {
+  padding: 0.55rem 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.sr-head .ver {
+  font-size: 13px;
+  font-weight: 700;
+}
+.sr-head .meta {
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.sr-body {
+  padding: 0.65rem;
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 0.65rem;
+  align-items: center;
+}
+.sr-ring {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+.sr-ring svg {
+  display: block;
+  transform: rotate(-90deg);
+}
+.sr-ring .pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+.sr-ring .pct .small {
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: -2px;
+}
+.sr-stat-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem 0.6rem;
+  font-size: 11px;
+}
+.sr-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.3rem;
+  color: var(--muted);
+}
+.sr-stat .n {
+  font-weight: 700;
+  color: var(--text);
+}
+.sr-stat .n.err { color: var(--error); }
+.sr-stat .n.warn { color: var(--warn); }
+.sr-stat .n.ok { color: var(--ok); }
+
+.sr-foot {
+  padding: 0.4rem 0.65rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 10px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.sr-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.35rem;
+  background: var(--surface-2);
+}
+.sr-check.ok { color: var(--ok); background: #d1fae5; }
+.sr-check.fail { color: var(--error); background: #fef2f2; }
+.sr-check.warn { color: var(--warn); background: #fef3c7; }
+.sr-check .mark { font-weight: 700; }
+
+/* ──────────────────────────────────────────────
+   CONCEPT D — Release Kanban
+   ────────────────────────────────────────────── */
+.rk-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.rk-col {
+  border-right: 1px solid var(--border);
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+}
+.rk-col:last-child { border-right: 0; }
+.rk-col-head {
+  padding: 0.55rem 0.75rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.rk-col-head .arrow {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.rk-col-head h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rk-col-head .count {
+  margin-left: auto;
+  background: var(--border);
+  color: var(--text);
+  padding: 0.05rem 0.4rem;
+  font-size: 10px;
+  font-weight: 700;
+}
+.rk-col.col-unreleased .rk-col-head { border-top: 2px solid var(--warn); }
+.rk-col.col-releasing .rk-col-head { border-top: 2px solid var(--accent); }
+.rk-col.col-released .rk-col-head { border-top: 2px solid var(--ok); }
+
+.rk-card {
+  margin: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.rk-card.is-releasing { border-left: 3px solid var(--accent); }
+.rk-card-head {
+  padding: 0.45rem 0.55rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.rk-card-head .vname {
+  font-size: 13px;
+  font-weight: 700;
+}
+.rk-card-head .vdate {
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.rk-card-body {
+  padding: 0.5rem 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 11px;
+}
+.rk-pbar {
+  height: 6px;
+  background: var(--surface-2);
+  position: relative;
+  overflow: hidden;
+}
+.rk-pbar .seg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+.rk-pbar .seg.done { background: var(--ok); }
+.rk-pbar .seg.ip { background: var(--accent); }
+.rk-pbar .seg.todo { background: var(--border-strong); }
+.rk-breakdown {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 10px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.rk-breakdown span strong { color: var(--text); font-weight: 700; }
+.rk-components {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+.rk-footer {
+  padding: 0.35rem 0.55rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 10px;
+  color: var(--muted);
+}
+.rk-footer .btn-ship {
+  margin-left: auto;
+  padding: 0.15rem 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  border: 0;
+  font: inherit;
+  font-size: 10px;
+  cursor: default;
+}
+.rk-footer .btn-ship:disabled {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT E — Changelog Wall
+   ────────────────────────────────────────────── */
+.cl-shell {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.cl-rail {
+  border-right: 1px solid var(--border);
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.cl-rail h4 {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+.cl-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 11px;
+  position: relative;
+  color: var(--text);
+  cursor: default;
+  border-left: 2px solid transparent;
+}
+.cl-rail-item.is-current {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  border-left-color: var(--accent);
+}
+.cl-rail-item .d {
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.cl-rail-item.is-current .d { color: var(--accent); }
+.cl-rail-item .dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background: var(--ok);
+}
+.cl-rail-item.unreleased .dot { background: var(--warn); }
+.cl-rail-item.planned .dot { background: var(--faint); }
+
+.cl-feed {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.cl-filters {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--border);
+}
+.cl-filters .label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-right: 0.3rem;
+}
+.cl-today-marker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--today);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 0.3rem 0;
+}
+.cl-today-marker::before,
+.cl-today-marker::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--today);
+}
+
+.cl-entry {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 1rem;
+}
+.cl-entry-meta {
+  font-size: 11px;
+  color: var(--muted);
+  padding-top: 0.1rem;
+}
+.cl-entry-meta .big-ver {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.cl-entry-meta .date {
+  margin-top: 0.1rem;
+}
+.cl-entry-meta .state {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding: 0.05rem 0.35rem;
+  font-size: 10px;
+  font-weight: 600;
+}
+.cl-entry-meta .state.released { background: #d1fae5; color: #065f46; }
+.cl-entry-meta .state.unreleased { background: #fef3c7; color: #92400e; }
+.cl-entry-meta .state.planned { background: var(--surface-2); color: var(--muted); }
+
+.cl-entry-body {
+  border-left: 1px solid var(--border);
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.cl-entry-body h3 {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.cl-entry-body .cl-summary {
+  font-size: 12px;
+  color: var(--muted);
+}
+.cl-group {
+  padding: 0.4rem 0;
+  border-top: 1px dashed var(--border);
+}
+.cl-group:first-of-type { border-top: 0; padding-top: 0; }
+.cl-group h5 {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.cl-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 12px;
+  padding: 0.15rem 0;
+}
+.cl-item .k {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 11px;
+  min-width: 4rem;
+}
+.cl-item .sum { flex: 1; min-width: 0; }
+.cl-progress-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+.cl-progress-mini .track {
+  flex: 1;
+  height: 4px;
+  background: var(--surface-2);
+}
+.cl-progress-mini .fill { height: 100%; background: var(--accent); }
+.cl-progress-mini .n { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <h1>Releases — UX Concepts</h1>
+  <p class="page-sub">
+    QUETZAL-UX-RELEASES-5 · 5 design directions for <code>/releases</code> · Pick a letter to implement
+  </p>
+
+  <!-- Quick nav -->
+  <nav class="quick-nav">
+    <a href="#concept-a"><span class="letter">A</span> Release Calendar</a>
+    <a href="#concept-b"><span class="letter">B</span> Version Train Timeline</a>
+    <a href="#concept-c"><span class="letter">C</span> Ship-Readiness Grid</a>
+    <a href="#concept-d"><span class="letter">D</span> Release Kanban</a>
+    <a href="#concept-e"><span class="letter">E</span> Changelog Wall</a>
+    <a href="#comparison">Compare</a>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT A — Release Calendar
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-a">
+    <div class="concept-head">
+      <span class="concept-letter">A</span>
+      <h2>Release Calendar</h2>
+      <span class="thesis">Month/week calendar with release markers — see what ships today, this week, this month at a glance.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Current <code>/releases</code> is a flat version list with no date affordance — you cannot see “what ships today” or spot a crowded release day. Teams coordinate deploys by date, not by scrolling a list. A calendar makes shipping cadence legible and surfaces release-day collisions early.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        A monthly grid shows at most ~5 weeks and truncates names on busy days. Versions without a target date don’t appear (needs sidebar fallback). Not ideal when 90% of versions are unscheduled. Needs week + agenda sub-views for different workflows.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="mock-toolbar">
+        <div class="seg">
+          <button>Day</button>
+          <button>Week</button>
+          <button class="is-on">Month</button>
+          <button>Agenda</button>
+        </div>
+        <button class="btn">◀ Oct</button>
+        <button class="btn" style="font-weight:700">November 2026</button>
+        <button class="btn">Dec ▶</button>
+        <span class="chip is-on">●  Today</span>
+        <span class="chip">Payments</span>
+        <span class="chip">Register</span>
+        <div class="spacer"></div>
+        <button class="btn">+ New version</button>
+      </div>
+
+      <div class="rc-shell">
+        <aside class="rc-side">
+          <h4>Today</h4>
+          <div class="rc-side-item">
+            <span class="dot unreleased"></span>
+            <span class="label"><strong>1.0</strong> target</span>
+            <span class="date">Nov 1</span>
+          </div>
+          <div class="rc-side-item" style="color:var(--muted);font-size:10px;padding:0.1rem 0 0.4rem 0.8rem">
+            6 issues · Payments, Register
+          </div>
+
+          <h4>This week</h4>
+          <div class="rc-side-item">
+            <span class="dot unreleased"></span>
+            <span class="label">1.0 Nov 1</span>
+          </div>
+          <div class="rc-side-item" style="color:var(--muted);padding-left:0.8rem;font-size:10px">no other releases</div>
+
+          <h4>This month</h4>
+          <div class="rc-side-item"><span class="dot unreleased"></span><span class="label">1.0</span><span class="date">Nov 1</span></div>
+          <div class="rc-side-item"><span class="dot planned"></span><span class="label">1.1</span><span class="date">Nov 22</span></div>
+
+          <h4>Unscheduled</h4>
+          <div class="rc-side-item"><span class="dot planned"></span><span class="label">1.2 Register</span></div>
+          <div class="rc-side-item"><span class="dot planned"></span><span class="label">1.3 Payments</span></div>
+
+          <h4>Legend</h4>
+          <div class="rc-side-item"><span class="dot released"></span><span class="label">Released</span></div>
+          <div class="rc-side-item"><span class="dot unreleased"></span><span class="label">Unreleased (due)</span></div>
+          <div class="rc-side-item"><span class="dot planned"></span><span class="label">Planned</span></div>
+        </aside>
+
+        <div class="rc-cal">
+          <div class="rc-today-strip">
+            <span class="label">Today · Sun Nov 1</span>
+            <span class="ver">
+              OPS 1.0
+              <span class="count">6 issues · 3 done · 1 ip · 2 todo</span>
+            </span>
+            <span style="color:var(--muted);font-size:11px">— ship review at 15:00</span>
+          </div>
+
+          <div class="rc-grid">
+            <div class="rc-dow">Sun</div><div class="rc-dow">Mon</div><div class="rc-dow">Tue</div>
+            <div class="rc-dow">Wed</div><div class="rc-dow">Thu</div><div class="rc-dow">Fri</div><div class="rc-dow">Sat</div>
+
+            <!-- Week 1 — Nov 1 is Sunday -->
+            <div class="rc-day is-today">
+              <span class="num">1</span>
+              <span class="rc-pill unreleased">1.0 target<span class="count">6 iss</span></span>
+            </div>
+            <div class="rc-day"><span class="num">2</span></div>
+            <div class="rc-day"><span class="num">3</span></div>
+            <div class="rc-day"><span class="num">4</span></div>
+            <div class="rc-day"><span class="num">5</span></div>
+            <div class="rc-day"><span class="num">6</span></div>
+            <div class="rc-day"><span class="num">7</span></div>
+
+            <!-- Week 2 -->
+            <div class="rc-day"><span class="num">8</span></div>
+            <div class="rc-day"><span class="num">9</span></div>
+            <div class="rc-day"><span class="num">10</span></div>
+            <div class="rc-day"><span class="num">11</span></div>
+            <div class="rc-day"><span class="num">12</span></div>
+            <div class="rc-day"><span class="num">13</span></div>
+            <div class="rc-day"><span class="num">14</span></div>
+
+            <!-- Week 3 -->
+            <div class="rc-day"><span class="num">15</span>
+              <span class="rc-pill planned">0.9 hotfix<span class="count">1 iss</span></span>
+            </div>
+            <div class="rc-day"><span class="num">16</span></div>
+            <div class="rc-day"><span class="num">17</span></div>
+            <div class="rc-day"><span class="num">18</span></div>
+            <div class="rc-day"><span class="num">19</span></div>
+            <div class="rc-day"><span class="num">20</span></div>
+            <div class="rc-day"><span class="num">21</span></div>
+
+            <!-- Week 4 -->
+            <div class="rc-day"><span class="num">22</span>
+              <span class="rc-pill planned">1.1<span class="count">4 iss</span></span>
+            </div>
+            <div class="rc-day"><span class="num">23</span></div>
+            <div class="rc-day"><span class="num">24</span></div>
+            <div class="rc-day"><span class="num">25</span></div>
+            <div class="rc-day"><span class="num">26</span></div>
+            <div class="rc-day"><span class="num">27</span></div>
+            <div class="rc-day"><span class="num">28</span></div>
+
+            <!-- Week 5 -->
+            <div class="rc-day"><span class="num">29</span></div>
+            <div class="rc-day"><span class="num">30</span>
+              <span class="rc-pill planned">1.1-rc<span class="count">cutover</span></span>
+            </div>
+            <div class="rc-day is-outside"><span class="num">1</span></div>
+            <div class="rc-day is-outside"><span class="num">2</span></div>
+            <div class="rc-day is-outside"><span class="num">3</span></div>
+            <div class="rc-day is-outside"><span class="num">4</span></div>
+            <div class="rc-day is-outside"><span class="num">5</span>
+              <span class="rc-pill planned">1.2<span class="count">draft</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT B — Version Train Timeline
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-b">
+    <div class="concept-head">
+      <span class="concept-letter">B</span>
+      <h2>Version Train Timeline</h2>
+      <span class="thesis">Horizontal date axis with release “trains” per component — see cadence, slips and overlap in one scan.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Teams want to see release <em>cadence</em>: are we shipping every 2 weeks on Payments but every 6 on Register? Where did 1.0 slip from? The current flat list hides that rhythm. A timeline per component shows past vs planned releases and makes slips (dashed lines) obvious.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        Needs horizontal real-estate; only ~6 time buckets fit without horizontal scroll. Each version must be anchored to a date (unscheduled falls off the chart). Harder to show scope — markers are compact. Component rows explode if you have 20+.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="mock-toolbar">
+        <div class="seg">
+          <button>Weeks</button>
+          <button class="is-on">Months</button>
+          <button>Quarters</button>
+        </div>
+        <span class="chip is-on">All components</span>
+        <span class="chip">Payments</span>
+        <span class="chip">Register</span>
+        <div class="spacer"></div>
+        <span class="chip" style="border-color:var(--today);color:var(--today)">● Today Nov 1</span>
+        <button class="btn">Export .ics</button>
+      </div>
+
+      <div class="tt-shell">
+        <div class="tt-axis">
+          <div>Component</div>
+          <div>Sep 26</div>
+          <div>Oct 26</div>
+          <div>Nov 26</div>
+          <div>Dec 26</div>
+          <div>Jan 27</div>
+          <div>Feb 27</div>
+        </div>
+
+        <!-- Row: All (summary) -->
+        <div class="tt-row">
+          <div class="tt-row-label">
+            <span class="cmp-name">OPS · all</span>
+            <span class="cmp-meta">5 versions · 2 released · 1 unreleased · 2 planned</span>
+          </div>
+          <div class="tt-track">
+            <!-- Today line at 36% (Nov 1 inside Nov col ~ mid-left of 6-col) -->
+            <div class="tt-today" style="left:38%"></div>
+            <div class="tt-today-flag" style="left:38%">TODAY</div>
+
+            <!-- 0.8 released Sep 20 -->
+            <div class="tt-marker" style="left:8%">
+              <span class="diamond"></span>
+              <span class="vlabel">0.8</span>
+              <span class="vdate">Sep 20</span>
+            </div>
+            <!-- 0.9 released Oct 18 -->
+            <div class="tt-marker" style="left:24%">
+              <span class="diamond"></span>
+              <span class="vlabel">0.9</span>
+              <span class="vdate">Oct 18</span>
+            </div>
+            <!-- Slip: 1.0 planned Oct 25, now Nov 1 -->
+            <div class="tt-slip" style="left:29%; width:9%"></div>
+            <div class="tt-marker unreleased" style="left:38%">
+              <span class="diamond"></span>
+              <span class="vlabel">1.0 ◆</span>
+              <span class="vdate">Nov 1 (was Oct 25)</span>
+            </div>
+            <!-- 1.1 planned Nov 22 -->
+            <div class="tt-marker planned" style="left:52%">
+              <span class="diamond"></span>
+              <span class="vlabel">1.1</span>
+              <span class="vdate">Nov 22</span>
+            </div>
+            <!-- 1.2 planned Dec 20 -->
+            <div class="tt-marker planned" style="left:70%">
+              <span class="diamond"></span>
+              <span class="vlabel">1.2</span>
+              <span class="vdate">Dec 20</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row: Payments -->
+        <div class="tt-row">
+          <div class="tt-row-label">
+            <span class="cmp-name"><span class="tag tag--cmp">Payments</span></span>
+            <span class="cmp-meta">cadence ~4 weeks · lead OPS-1</span>
+          </div>
+          <div class="tt-track">
+            <div class="tt-today" style="left:38%"></div>
+            <div class="tt-ghost" style="left:8%; width:16%"></div>
+            <div class="tt-marker" style="left:8%"><span class="diamond"></span><span class="vlabel">0.8</span><span class="vdate">Sep 20</span></div>
+            <div class="tt-ghost" style="left:24%; width:14%"></div>
+            <div class="tt-marker" style="left:24%"><span class="diamond"></span><span class="vlabel">0.9</span><span class="vdate">Oct 18</span></div>
+            <div class="tt-slip" style="left:29%; width:9%"></div>
+            <div class="tt-marker unreleased" style="left:38%"><span class="diamond"></span><span class="vlabel">1.0</span><span class="vdate">Nov 1</span></div>
+            <div class="tt-marker planned" style="left:70%"><span class="diamond"></span><span class="vlabel">1.2</span><span class="vdate">Dec 20</span></div>
+          </div>
+        </div>
+
+        <!-- Row: Register -->
+        <div class="tt-row">
+          <div class="tt-row-label">
+            <span class="cmp-name"><span class="tag tag--cmp tag--cmp-reg">Register</span></span>
+            <span class="cmp-meta">cadence ~6 weeks · lead OPS-6</span>
+          </div>
+          <div class="tt-track">
+            <div class="tt-today" style="left:38%"></div>
+            <div class="tt-ghost" style="left:16%; width:36%"></div>
+            <div class="tt-marker" style="left:16%"><span class="diamond"></span><span class="vlabel">0.8</span><span class="vdate">Oct 4</span></div>
+            <div class="tt-marker unreleased" style="left:38%"><span class="diamond"></span><span class="vlabel">1.0</span><span class="vdate">Nov 1</span></div>
+            <div class="tt-marker planned" style="left:52%"><span class="diamond"></span><span class="vlabel">1.1</span><span class="vdate">Nov 22</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT C — Ship-Readiness Grid
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-c">
+    <div class="concept-head">
+      <span class="concept-letter">C</span>
+      <h2>Ship-Readiness Grid</h2>
+      <span class="thesis">Version cards with progress rings + ship checklist — the release-manager’s cockpit.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Current list shows the version is “Unreleased” but gives no sense of <em>readiness</em>: how many issues are done, how many bugs block ship, is QA signed off, release notes written. A ring + ship checklist per card answers “can we ship today?” in one scan — the single question release managers actually ask.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        Dense card grid takes vertical space (6 cards ≈ 2 scrolls). Useless for long-tail archived versions — needs an “active only” filter. Ship checks require conventions (bug count, QA sign-off, notes field) that the data model may not yet enforce.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="mock-toolbar">
+        <span class="chip is-on">Active (3)</span>
+        <span class="chip">All versions (5)</span>
+        <span class="chip">Released (2)</span>
+        <div class="spacer"></div>
+        <span style="font-size:11px;color:var(--muted)">Sort</span>
+        <div class="seg">
+          <button class="is-on">By target date</button>
+          <button>By readiness</button>
+          <button>By version</button>
+        </div>
+      </div>
+
+      <div class="sr-grid">
+        <!-- Card 1 — 1.0 Unreleased (focused) -->
+        <div class="sr-card is-focus">
+          <div class="sr-head">
+            <span class="ver">1.0</span>
+            <span class="tag tag--unreleased">Unreleased</span>
+            <span class="meta">target Nov 1 · 0 days</span>
+          </div>
+          <div class="sr-body">
+            <div class="sr-ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--surface-2)" stroke-width="8"/>
+                <!-- 50% done (3/6) -->
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--accent)" stroke-width="8"
+                        stroke-dasharray="94.2 188.5" stroke-linecap="butt"/>
+              </svg>
+              <div class="pct">50%<span class="small">3/6 iss</span></div>
+            </div>
+            <div class="sr-stat-list">
+              <span class="sr-stat"><span>Done</span><span class="n ok">3</span></span>
+              <span class="sr-stat"><span>In progress</span><span class="n">1</span></span>
+              <span class="sr-stat"><span>To do</span><span class="n warn">2</span></span>
+              <span class="sr-stat"><span>Blockers</span><span class="n err">1</span></span>
+              <span class="sr-stat"><span>Points</span><span class="n">20</span></span>
+              <span class="sr-stat"><span>Components</span><span class="n">2</span></span>
+            </div>
+          </div>
+          <div class="sr-foot">
+            <span class="sr-check ok"><span class="mark">✓</span> Scope frozen</span>
+            <span class="sr-check warn"><span class="mark">!</span> 2 open</span>
+            <span class="sr-check fail"><span class="mark">✕</span> No notes</span>
+            <span class="sr-check ok"><span class="mark">✓</span> QA started</span>
+          </div>
+        </div>
+
+        <!-- Card 2 — 1.1 Planned -->
+        <div class="sr-card">
+          <div class="sr-head">
+            <span class="ver">1.1</span>
+            <span class="tag tag--planned">Planned</span>
+            <span class="meta">target Nov 22 · 21 days</span>
+          </div>
+          <div class="sr-body">
+            <div class="sr-ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--surface-2)" stroke-width="8"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--accent)" stroke-width="8"
+                        stroke-dasharray="18.8 188.5"/>
+              </svg>
+              <div class="pct">10%<span class="small">1/4 iss</span></div>
+            </div>
+            <div class="sr-stat-list">
+              <span class="sr-stat"><span>Done</span><span class="n ok">1</span></span>
+              <span class="sr-stat"><span>In progress</span><span class="n">0</span></span>
+              <span class="sr-stat"><span>To do</span><span class="n">3</span></span>
+              <span class="sr-stat"><span>Blockers</span><span class="n">0</span></span>
+              <span class="sr-stat"><span>Points</span><span class="n">11</span></span>
+              <span class="sr-stat"><span>Components</span><span class="n">1</span></span>
+            </div>
+          </div>
+          <div class="sr-foot">
+            <span class="sr-check warn"><span class="mark">!</span> Scope open</span>
+            <span class="sr-check ok"><span class="mark">✓</span> On schedule</span>
+          </div>
+        </div>
+
+        <!-- Card 3 — 0.9 Released -->
+        <div class="sr-card">
+          <div class="sr-head">
+            <span class="ver">0.9</span>
+            <span class="tag tag--released">Released</span>
+            <span class="meta">Oct 18 · 14 days ago</span>
+          </div>
+          <div class="sr-body">
+            <div class="sr-ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--surface-2)" stroke-width="8"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--ok)" stroke-width="8"
+                        stroke-dasharray="188.5 188.5"/>
+              </svg>
+              <div class="pct" style="color:var(--ok)">100%<span class="small">5/5 iss</span></div>
+            </div>
+            <div class="sr-stat-list">
+              <span class="sr-stat"><span>Shipped</span><span class="n ok">5</span></span>
+              <span class="sr-stat"><span>Hotfixes</span><span class="n">1</span></span>
+              <span class="sr-stat"><span>Points</span><span class="n">13</span></span>
+              <span class="sr-stat"><span>Components</span><span class="n">2</span></span>
+              <span class="sr-stat"><span>Lead-time</span><span class="n">17 d</span></span>
+              <span class="sr-stat"><span>Slip</span><span class="n warn">+3 d</span></span>
+            </div>
+          </div>
+          <div class="sr-foot">
+            <span class="sr-check ok"><span class="mark">✓</span> Notes published</span>
+            <span class="sr-check ok"><span class="mark">✓</span> Tag v0.9</span>
+            <span class="sr-check ok"><span class="mark">✓</span> QA signed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT D — Release Kanban
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-d">
+    <div class="concept-head">
+      <span class="concept-letter">D</span>
+      <h2>Release Kanban</h2>
+      <span class="thesis">Three lanes — Unreleased → Releasing → Released — drag versions through the ship pipeline.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Shipping a version is itself a workflow (freeze → QA → tag → deploy → announce), but today it’s binary: Unreleased or Released. A kanban makes the “in-flight” state (<em>Releasing</em>) explicit, forces WIP limits, and gives release managers a single board to run their standup from.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        Adds a required workflow state (<em>Releasing</em>) to the data model. Three columns waste horizontal space on projects with 1 active version. Doesn’t show dates visually — pair with calendar (A) for date context.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="mock-toolbar">
+        <div class="seg">
+          <button class="is-on">Active</button>
+          <button>Last 30 d</button>
+          <button>All time</button>
+        </div>
+        <span class="chip">Payments</span>
+        <span class="chip">Register</span>
+        <div class="spacer"></div>
+        <span style="font-size:11px;color:var(--muted)">WIP in Releasing: <strong style="color:var(--text)">1 / 2</strong></span>
+      </div>
+
+      <div class="rk-board">
+        <!-- Unreleased -->
+        <div class="rk-col col-unreleased">
+          <div class="rk-col-head">
+            <span class="arrow">◢</span>
+            <h3>Unreleased</h3>
+            <span class="count">2</span>
+          </div>
+          <div class="rk-card">
+            <div class="rk-card-head">
+              <span class="vname">1.1</span>
+              <span class="tag tag--planned">Planned</span>
+              <span class="vdate">Nov 22</span>
+            </div>
+            <div class="rk-card-body">
+              <div class="rk-pbar">
+                <div class="seg done" style="left:0%;width:25%"></div>
+                <div class="seg todo" style="left:25%;width:75%"></div>
+              </div>
+              <div class="rk-breakdown">
+                <span><strong>4</strong> iss</span>
+                <span><strong>1</strong> done</span>
+                <span><strong>3</strong> todo</span>
+                <span><strong>11</strong> pts</span>
+              </div>
+              <div class="rk-components">
+                <span class="tag tag--cmp">Payments</span>
+              </div>
+            </div>
+            <div class="rk-footer">
+              <span>Owner: Ana B.</span>
+              <button class="btn-ship" disabled>Start release</button>
+            </div>
+          </div>
+          <div class="rk-card">
+            <div class="rk-card-head">
+              <span class="vname">1.2</span>
+              <span class="tag tag--planned">Planned</span>
+              <span class="vdate">no date</span>
+            </div>
+            <div class="rk-card-body">
+              <div class="rk-pbar">
+                <div class="seg todo" style="left:0%;width:100%"></div>
+              </div>
+              <div class="rk-breakdown">
+                <span><strong>2</strong> iss</span>
+                <span><strong>0</strong> done</span>
+                <span><strong>5</strong> pts</span>
+              </div>
+              <div class="rk-components">
+                <span class="tag tag--cmp tag--cmp-reg">Register</span>
+              </div>
+            </div>
+            <div class="rk-footer">
+              <span style="color:var(--warn)">! Needs target date</span>
+              <button class="btn-ship" disabled>Start release</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Releasing -->
+        <div class="rk-col col-releasing">
+          <div class="rk-col-head">
+            <span class="arrow">◢</span>
+            <h3>Releasing</h3>
+            <span class="count">1</span>
+          </div>
+          <div class="rk-card is-releasing">
+            <div class="rk-card-head">
+              <span class="vname">1.0</span>
+              <span class="tag tag--unreleased">In release</span>
+              <span class="vdate">target today</span>
+            </div>
+            <div class="rk-card-body">
+              <div class="rk-pbar">
+                <div class="seg done" style="left:0%;width:50%"></div>
+                <div class="seg ip" style="left:50%;width:17%"></div>
+                <div class="seg todo" style="left:67%;width:33%"></div>
+              </div>
+              <div class="rk-breakdown">
+                <span><strong>6</strong> iss</span>
+                <span><strong>3</strong> done</span>
+                <span><strong>1</strong> ip</span>
+                <span><strong>2</strong> todo</span>
+                <span><strong>20</strong> pts</span>
+              </div>
+              <div class="rk-components">
+                <span class="tag tag--cmp">Payments</span>
+                <span class="tag tag--cmp tag--cmp-reg">Register</span>
+              </div>
+              <div style="font-size:10px;color:var(--muted);display:flex;gap:0.3rem;flex-wrap:wrap;margin-top:0.1rem">
+                <span class="sr-check ok"><span class="mark">✓</span> Scope frozen</span>
+                <span class="sr-check warn"><span class="mark">!</span> 2 open</span>
+                <span class="sr-check fail"><span class="mark">✕</span> Notes</span>
+              </div>
+            </div>
+            <div class="rk-footer">
+              <span>Owner: Ana B.</span>
+              <button class="btn-ship">Mark released ▸</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Released -->
+        <div class="rk-col col-released">
+          <div class="rk-col-head">
+            <span class="arrow">◢</span>
+            <h3>Released</h3>
+            <span class="count">2</span>
+          </div>
+          <div class="rk-card">
+            <div class="rk-card-head">
+              <span class="vname">0.9</span>
+              <span class="tag tag--released">Released</span>
+              <span class="vdate">Oct 18</span>
+            </div>
+            <div class="rk-card-body">
+              <div class="rk-pbar"><div class="seg done" style="left:0%;width:100%"></div></div>
+              <div class="rk-breakdown">
+                <span><strong>5</strong> iss</span>
+                <span><strong>13</strong> pts</span>
+                <span>Lead-time <strong>17d</strong></span>
+                <span style="color:var(--warn)">Slip <strong>+3d</strong></span>
+              </div>
+              <div class="rk-components">
+                <span class="tag tag--cmp">Payments</span>
+                <span class="tag tag--cmp tag--cmp-reg">Register</span>
+              </div>
+            </div>
+            <div class="rk-footer">
+              <span><a href="#">v0.9 notes ↗</a></span>
+            </div>
+          </div>
+          <div class="rk-card">
+            <div class="rk-card-head">
+              <span class="vname">0.8</span>
+              <span class="tag tag--released">Released</span>
+              <span class="vdate">Sep 20</span>
+            </div>
+            <div class="rk-card-body">
+              <div class="rk-pbar"><div class="seg done" style="left:0%;width:100%"></div></div>
+              <div class="rk-breakdown">
+                <span><strong>4</strong> iss</span>
+                <span><strong>9</strong> pts</span>
+                <span>Lead-time <strong>12d</strong></span>
+              </div>
+              <div class="rk-components">
+                <span class="tag tag--cmp">Payments</span>
+              </div>
+            </div>
+            <div class="rk-footer">
+              <span><a href="#">v0.8 notes ↗</a></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT E — Changelog Wall
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-e">
+    <div class="concept-head">
+      <span class="concept-letter">E</span>
+      <h2>Changelog Wall</h2>
+      <span class="thesis">Chronological, product-changelog style wall — doubles as internal history <em>and</em> external release notes.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        The current list reads like a database dump — great for engineers, useless for a customer-success rep asking “what shipped last week?”. A Linear/Vercel-style changelog groups issues by version in reverse chronological order, with a left scrubber of all versions and a <em>Today</em> marker. Filterable by component for scoped “what’s new in Payments” exports.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        Long-form layout — ~1 version per viewport — so poor for 30+ versions without pagination. Marketing-shaped titles need author input (not auto-derived). Does not surface in-flight work well; use alongside kanban (D) for operational views.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="mock-toolbar">
+        <div class="seg">
+          <button class="is-on">Newest first</button>
+          <button>Oldest first</button>
+        </div>
+        <span class="chip is-on">All versions</span>
+        <span class="chip">Released only</span>
+        <div class="spacer"></div>
+        <button class="btn">Copy as Markdown</button>
+        <button class="btn btn--primary">Publish 1.0 notes</button>
+      </div>
+
+      <div class="cl-shell">
+        <aside class="cl-rail">
+          <h4>Versions</h4>
+          <div class="cl-rail-item planned"><span class="dot"></span>1.2<span class="d">draft</span></div>
+          <div class="cl-rail-item planned"><span class="dot"></span>1.1<span class="d">Nov 22</span></div>
+          <div class="cl-rail-item unreleased is-current"><span class="dot"></span>1.0<span class="d">today</span></div>
+          <div class="cl-rail-item"><span class="dot"></span>0.9<span class="d">Oct 18</span></div>
+          <div class="cl-rail-item"><span class="dot"></span>0.8<span class="d">Sep 20</span></div>
+        </aside>
+
+        <div class="cl-feed">
+          <div class="cl-filters">
+            <span class="label">Filter</span>
+            <span class="chip is-on" style="padding:0.1rem 0.4rem;font-size:10px">Payments</span>
+            <span class="chip is-on" style="padding:0.1rem 0.4rem;font-size:10px">Register</span>
+            <span class="chip" style="padding:0.1rem 0.4rem;font-size:10px">Bugs only</span>
+            <span class="chip" style="padding:0.1rem 0.4rem;font-size:10px">Stories only</span>
+          </div>
+
+          <div class="cl-today-marker">
+            <span>▼ Today · Sun Nov 1, 2026</span>
+          </div>
+
+          <!-- 1.0 Unreleased, shipping today -->
+          <article class="cl-entry">
+            <div class="cl-entry-meta">
+              <div class="big-ver">1.0</div>
+              <div class="date">target Nov 1</div>
+              <span class="state unreleased">Unreleased</span>
+              <div style="margin-top:0.4rem;font-size:10px">
+                <span class="tag tag--cmp">Payments</span>
+                <span class="tag tag--cmp tag--cmp-reg">Register</span>
+              </div>
+            </div>
+            <div class="cl-entry-body">
+              <h3>Checkout reliability + end-of-day register close</h3>
+              <p class="cl-summary">
+                First GA release of the OPS stack. Hardens payment capture against double charges and retries, and locks the register down with a proper close-of-day flow.
+              </p>
+              <div class="cl-progress-mini">
+                <div class="track"><div class="fill" style="width:50%"></div></div>
+                <span class="n">50% · 3 / 6 done</span>
+              </div>
+
+              <div class="cl-group">
+                <h5>Payments · epic OPS-1</h5>
+                <div class="cl-item">
+                  <span class="k">OPS-2</span>
+                  <span class="sum">Retry a failed capture</span>
+                  <span class="tag tag--ip">In progress</span>
+                </div>
+                <div class="cl-item">
+                  <span class="k">OPS-3</span>
+                  <span class="sum">Store the idempotency key</span>
+                  <span class="tag tag--done">Done</span>
+                </div>
+                <div class="cl-item">
+                  <span class="k">OPS-4</span>
+                  <span class="sum">Duplicate charge on timeout</span>
+                  <span class="tag tag--todo">To do</span>
+                </div>
+                <div class="cl-item">
+                  <span class="k">OPS-5</span>
+                  <span class="sum">Refund confirmation email</span>
+                  <span class="tag tag--todo">To do</span>
+                </div>
+              </div>
+
+              <div class="cl-group">
+                <h5>Register</h5>
+                <div class="cl-item">
+                  <span class="k">OPS-6</span>
+                  <span class="sum">Close the register (end-of-day totals, lock drawer)</span>
+                  <span class="tag tag--done">Done</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 0.9 Released -->
+          <article class="cl-entry">
+            <div class="cl-entry-meta">
+              <div class="big-ver">0.9</div>
+              <div class="date">Oct 18, 2026</div>
+              <span class="state released">Released</span>
+              <div style="margin-top:0.4rem;font-size:10px">
+                <span class="tag tag--cmp">Payments</span>
+                <span class="tag tag--cmp tag--cmp-reg">Register</span>
+              </div>
+            </div>
+            <div class="cl-entry-body">
+              <h3>Hardened capture + opening float</h3>
+              <p class="cl-summary">
+                Prep release for 1.0 — foundational idempotency plumbing and the first register-opening screen.
+              </p>
+              <div class="cl-group">
+                <h5>Highlights</h5>
+                <div class="cl-item"><span class="k">OPS-0.9a</span><span class="sum">Capture retry queue (backoff + max 3)</span><span class="tag tag--done">Done</span></div>
+                <div class="cl-item"><span class="k">OPS-0.9b</span><span class="sum">Register opening float input</span><span class="tag tag--done">Done</span></div>
+                <div class="cl-item"><span class="k">OPS-0.9c</span><span class="sum">Fix: refund rounding off by 1¢</span><span class="tag tag--done">Done</span></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 0.8 Released (collapsed-ish) -->
+          <article class="cl-entry">
+            <div class="cl-entry-meta">
+              <div class="big-ver">0.8</div>
+              <div class="date">Sep 20, 2026</div>
+              <span class="state released">Released</span>
+              <div style="margin-top:0.4rem;font-size:10px">
+                <span class="tag tag--cmp">Payments</span>
+              </div>
+            </div>
+            <div class="cl-entry-body">
+              <h3>Payments MVP</h3>
+              <p class="cl-summary">
+                First payments slice: card + cash, single-currency, no refunds yet.
+              </p>
+              <div class="cl-group">
+                <div class="cl-item"><span class="k">OPS-0.8a</span><span class="sum">Stripe adapter + webhook retry</span><span class="tag tag--done">Done</span></div>
+                <div class="cl-item"><span class="k">OPS-0.8b</span><span class="sum">Cash drawer basic model</span><span class="tag tag--done">Done</span></div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       COMPARISON TABLE
+       ═══════════════════════════════════════════ -->
+  <section id="comparison" style="margin-top:2rem">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:0.75rem">Comparison — A through E</h2>
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Concept</th>
+          <th>Best for</th>
+          <th>Shows date?</th>
+          <th>Shows readiness?</th>
+          <th>Shows cadence?</th>
+          <th>Doubles as release notes?</th>
+          <th>Risk / gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>A — Release Calendar</td>
+          <td>Daily “what ships today” standup, release-day collisions, cross-team ETA</td>
+          <td style="color:var(--ok);font-weight:600">Yes — full month grid</td>
+          <td>Only via pill color</td>
+          <td>Visible across the month</td>
+          <td>No</td>
+          <td>Unscheduled versions hide in sidebar; dense days truncate</td>
+        </tr>
+        <tr>
+          <td>B — Version Train Timeline</td>
+          <td>Spotting slips, per-component cadence, portfolio planning</td>
+          <td style="color:var(--ok);font-weight:600">Yes — date axis</td>
+          <td>No</td>
+          <td style="color:var(--ok);font-weight:600">Yes — per component row</td>
+          <td>No</td>
+          <td>No scope / issue detail; needs dates on every version</td>
+        </tr>
+        <tr>
+          <td>C — Ship-Readiness Grid</td>
+          <td>Release manager cockpit — “can we ship today?”</td>
+          <td>Target date on card</td>
+          <td style="color:var(--ok);font-weight:600">Yes — ring + checklist</td>
+          <td>No</td>
+          <td>Partial (checklist includes notes)</td>
+          <td>Needs ship-check model; vertical-heavy for 10+ versions</td>
+        </tr>
+        <tr>
+          <td>D — Release Kanban</td>
+          <td>Running the actual release workflow; forcing explicit <em>Releasing</em> state</td>
+          <td>Date on card</td>
+          <td>Via progress bar + mini checks</td>
+          <td>No</td>
+          <td>No</td>
+          <td>Requires new workflow state; wasteful if 1 active version</td>
+        </tr>
+        <tr>
+          <td>E — Changelog Wall</td>
+          <td>Customer-facing notes, internal history, async consumption</td>
+          <td>Per version header</td>
+          <td>Mini progress bar on in-flight</td>
+          <td>Reverse-chronological only</td>
+          <td style="color:var(--ok);font-weight:600">Yes — publish-ready</td>
+          <td>Long-form; marketing titles need author input</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="border:1px solid var(--border);background:var(--surface);padding:1rem;margin-top:1rem">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:0.5rem">Which letter should we implement?</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:0.75rem">
+        These compose well: <strong>A</strong> (calendar) + <strong>D</strong> (kanban) covers daily release-manager work;
+        <strong>B</strong> (train) + <strong>C</strong> (readiness) covers portfolio planning;
+        <strong>E</strong> (changelog) always layers on top as the output. Pick a primary letter — or a combo like
+        <strong>A+C</strong> as tabs — and we’ll build it.
+      </p>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:pointer">A</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:pointer">B</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:pointer">C</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:pointer">D</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:pointer">E</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Current releases screenshot reference ── -->
+  <section style="margin-top:2rem">
+    <h2 style="font-size:14px;font-weight:600;margin-bottom:0.5rem;color:var(--muted)">Reference — Current /releases</h2>
+    <p style="font-size:11px;color:var(--faint);margin-bottom:0.5rem">
+      Screenshot of the live <code>/releases</code> page these concepts aim to improve: flat version list + unscheduled issues, no date affordance.
+    </p>
+    <div style="border:1px solid var(--border);background:var(--surface);padding:0.5rem;max-width:900px">
+      <img src="../assets/releases-current.png" alt="Current Quetzal Releases screenshot"
+           style="width:100%;display:block;border:1px solid var(--border)"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <p style="display:none;font-size:11px;color:var(--faint);padding:1rem;text-align:center">
+        (Screenshot not found — see attached image in ticket)
+      </p>
+    </div>
+  </section>
+</div>
+
+</body>
+</html>

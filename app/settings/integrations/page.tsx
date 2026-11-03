@@ -1,0 +1,230 @@
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import {
+  createWebhookAction,
+  deleteWebhookAction,
+  saveSlackConnectorAction,
+  toggleWebhookAction,
+} from '@/app/settings/integrations/actions';
+import { getEffectiveNotifyConfig, getNotifyChannelSettings } from '@/lib/notify';
+import { currentUser } from '@/lib/session';
+import { listWebhooks, WEBHOOK_EVENTS } from '@/lib/webhooks';
+
+const EVENT_LABEL: Record<(typeof WEBHOOK_EVENTS)[number], string> = {
+  'issue.status_changed': 'Issue status changed',
+  'issue.comment_added': 'Issue comment added',
+};
+
+export default async function IntegrationsSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string; error?: string }>;
+}) {
+  const user = await currentUser();
+  if (user.role !== 'admin') redirect('/');
+
+  const params = await searchParams;
+  const [hooks, settings, effective] = await Promise.all([
+    listWebhooks(),
+    getNotifyChannelSettings(),
+    getEffectiveNotifyConfig(),
+  ]);
+
+  return (
+    <>
+      <div className="topbar">
+        <Link className="crumb" href="/">
+          Work
+        </Link>
+        <span className="faint">/</span>
+        <Link className="crumb" href="/settings">
+          Settings
+        </Link>
+        <span className="faint">/</span>
+        <span className="crumb current">Integrations</span>
+      </div>
+      <main className="page">
+        <div className="page-head">
+          <div>
+            <h1 className="page-title">Integrations</h1>
+            <p className="page-sub">
+              Outbound webhooks and first connectors. SMTP details stay under{' '}
+              <Link href="/settings/notifications">Notifications</Link>.
+            </p>
+          </div>
+        </div>
+
+        {params.saved === 'webhook' ? (
+          <p className="muted" style={{ marginBottom: '0.75rem' }}>
+            Webhooks updated.
+          </p>
+        ) : null}
+        {params.saved === 'slack' ? (
+          <p className="muted" style={{ marginBottom: '0.75rem' }}>
+            Slack connector saved.
+          </p>
+        ) : null}
+        {params.error === 'webhook' ? (
+          <p className="muted" style={{ marginBottom: '0.75rem', color: 'var(--danger, #b91c1c)' }}>
+            Could not create webhook — URL must be http(s).
+          </p>
+        ) : null}
+
+        <section className="panel" style={{ marginBottom: '1rem' }}>
+          <div className="panel-head">Connectors</div>
+          <div className="panel-body stack">
+            <div className="row-actions" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span className={effective.slackReady ? 'tag tag--ok' : 'tag tag--muted'}>
+                Slack {effective.slackReady ? 'ready' : 'not ready'}
+                {effective.slackFromEnv ? ' · env' : ''}
+              </span>
+              <span className={effective.mailReady ? 'tag tag--ok' : 'tag tag--muted'}>
+                Email {effective.mailReady ? 'ready' : 'not ready'}
+                {effective.smtpFromEnv ? ' · env' : ''}
+              </span>
+              <span className="tag tag--info">Webhooks {hooks.length}</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="panel" style={{ marginBottom: '1rem' }}>
+          <div className="panel-head">Slack</div>
+          <form className="panel-body stack" action={saveSlackConnectorAction}>
+            <p className="muted" style={{ margin: 0 }}>
+              Incoming Webhook posts in-app notify events to a Slack channel. Env{' '}
+              <code>QUETZAL_SLACK_WEBHOOK</code> overrides the form when set.
+            </p>
+            <label className="field field--check">
+              <input
+                type="checkbox"
+                name="slack_enabled"
+                value="1"
+                defaultChecked={settings.slackEnabled}
+              />
+              <span>Enable Slack webhook</span>
+            </label>
+            <label className="field">
+              <span>Webhook URL</span>
+              <input
+                type="url"
+                name="slack_webhook_url"
+                defaultValue={settings.slackWebhookUrl}
+                placeholder="https://hooks.slack.com/services/…"
+                autoComplete="off"
+              />
+            </label>
+            <div className="row-actions">
+              <button type="submit" className="btn">
+                Save Slack
+              </button>
+              <Link className="btn-secondary" href="/settings/notifications">
+                Email / SMTP
+              </Link>
+            </div>
+          </form>
+        </section>
+
+        <section className="panel" style={{ marginBottom: '1rem' }}>
+          <div className="panel-head">Outbound webhooks</div>
+          <div className="panel-body stack">
+            <p className="muted" style={{ margin: 0 }}>
+              Signed JSON POSTs when issues change. Header{' '}
+              <code>x-quetzal-signature: sha256=…</code> when a secret is set.
+            </p>
+
+            {hooks.length === 0 ? (
+              <p className="muted">No webhooks yet.</p>
+            ) : (
+              <table className="data">
+                <thead>
+                  <tr>
+                    <th>URL</th>
+                    <th>Events</th>
+                    <th>Secret</th>
+                    <th>Status</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {hooks.map((hook) => (
+                    <tr key={hook.id}>
+                      <td style={{ maxWidth: '16rem', wordBreak: 'break-all' }}>{hook.url}</td>
+                      <td>
+                        <div className="row-actions" style={{ flexWrap: 'wrap' }}>
+                          {hook.events.map((event) => (
+                            <span key={event} className="tag tag--muted">
+                              {EVENT_LABEL[event] ?? event}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="muted">{hook.secret ? 'set' : '—'}</td>
+                      <td>
+                        <span className={hook.enabled ? 'tag tag--ok' : 'tag tag--muted'}>
+                          {hook.enabled ? 'On' : 'Off'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="row-actions">
+                          <form action={toggleWebhookAction}>
+                            <input type="hidden" name="id" value={hook.id} />
+                            <input type="hidden" name="enabled" value={hook.enabled ? '0' : '1'} />
+                            <button type="submit" className="btn-secondary">
+                              {hook.enabled ? 'Disable' : 'Enable'}
+                            </button>
+                          </form>
+                          <form action={deleteWebhookAction}>
+                            <input type="hidden" name="id" value={hook.id} />
+                            <button type="submit" className="btn-secondary">
+                              Delete
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">Add webhook</div>
+          <form className="panel-body stack" action={createWebhookAction}>
+            <label className="field">
+              <span>Endpoint URL</span>
+              <input
+                type="url"
+                name="url"
+                required
+                placeholder="https://example.com/hooks/quetzal"
+                autoComplete="off"
+              />
+            </label>
+            <label className="field">
+              <span>Signing secret (optional)</span>
+              <input type="text" name="secret" autoComplete="off" placeholder="shared secret" />
+            </label>
+            <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0 }}>
+              <legend className="muted" style={{ fontSize: '12px', marginBottom: '0.35rem' }}>
+                Events
+              </legend>
+              {WEBHOOK_EVENTS.map((event) => (
+                <label key={event} className="field field--check">
+                  <input type="checkbox" name={`event_${event}`} value="1" defaultChecked />
+                  <span>{EVENT_LABEL[event]}</span>
+                </label>
+              ))}
+            </fieldset>
+            <div className="row-actions">
+              <button type="submit" className="btn">
+                Create webhook
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
+    </>
+  );
+}

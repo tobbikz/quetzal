@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+# Allow a seed SQLite for `next build` page collection; keep WAL out of context.
+data/*.db-*
+data/*.db-journal
+data/uploads/**
+!data/uploads/.gitkeep
+!data/quetzal.build.db
+!data/quetzal.db
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+docs
+agent-transcripts

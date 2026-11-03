@@ -1,0 +1,2 @@
+-- SQLite-only noop: runner already creates schema_migrations.
+PRAGMA user_version = user_version;

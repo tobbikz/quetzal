@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quetzal · Home layout options</title>
+    <style>
+      :root {
+        --bg: #f3f5f8;
+        --ink: #0f172a;
+        --mute: #64748b;
+        --faint: #94a3b8;
+        --line: #e2e8f0;
+        --panel: #fff;
+        --blue: #2563eb;
+        --blue-dark: #1d4ed8;
+        --blue-soft: rgba(37, 99, 235, 0.12);
+        --ok: #059669;
+        --warn: #d97706;
+        --review: #f59e0b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "DM Sans", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.4;
+      }
+      .page-head {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 1rem;
+      }
+      .page-head h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.65rem;
+        letter-spacing: -0.03em;
+      }
+      .page-head p {
+        margin: 0;
+        color: var(--mute);
+        max-width: 46rem;
+      }
+      .page-head .links {
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+      }
+      .page-head a { color: var(--blue); font-weight: 650; text-decoration: none; }
+      .page-head a:hover { text-decoration: underline; }
+      .toc {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 1rem;
+      }
+      .toc a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.65rem;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 650;
+        text-decoration: none;
+      }
+      .toc a:hover { border-color: var(--blue); color: var(--blue); }
+      .toc .letter {
+        width: 1.25rem; height: 1.25rem;
+        border-radius: 4px;
+        background: #eff6ff;
+        color: var(--blue);
+        display: grid; place-items: center;
+        font-size: 10px; font-weight: 800;
+      }
+
+      .stack {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0.5rem 1.25rem 3rem;
+        display: grid;
+        gap: 1.5rem;
+      }
+      article.opt {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .opt-meta {
+        padding: 0.95rem 1.15rem 0.85rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .opt-meta h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+      }
+      .opt-meta .letter {
+        width: 1.6rem; height: 1.6rem;
+        border-radius: 6px;
+        background: #eff6ff;
+        color: var(--blue);
+        display: grid; place-items: center;
+        font-size: 0.85rem; font-weight: 800;
+      }
+      .opt-meta p {
+        margin: 0.3rem 0 0;
+        color: var(--mute);
+        font-size: 0.9rem;
+      }
+      .opt-meta .spec {
+        margin-top: 0.45rem;
+        font-size: 11px;
+        color: var(--faint);
+        font-family: ui-monospace, monospace;
+      }
+
+      /* Shared mock frame */
+      .mock {
+        background: #eef2f7;
+        padding: 0.85rem;
+      }
+      .desk {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.85rem;
+        display: grid;
+        gap: 0.75rem;
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.55rem;
+      }
+      .kpi {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.65rem 0.75rem;
+        min-height: 4.2rem;
+      }
+      .kpi .l {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+      .kpi .v {
+        margin-top: 0.2rem;
+        font-size: 1.35rem;
+        font-weight: 750;
+        letter-spacing: -0.03em;
+      }
+      .kpi .d {
+        margin-top: 0.15rem;
+        font-size: 11px;
+        color: var(--mute);
+      }
+      .kpi .d.up { color: var(--ok); }
+      .kpi .d.down { color: #dc2626; }
+
+      .row12 {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 0.55rem;
+      }
+      .c4 { grid-column: span 4; }
+      .c6 { grid-column: span 6; }
+      .c8 { grid-column: span 8; }
+      .c12 { grid-column: span 12; }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .panel-h {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.55rem 0.7rem;
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .panel-h .tag {
+        font-size: 10px;
+        font-weight: 650;
+        color: var(--mute);
+        background: #f1f5f9;
+        border-radius: 4px;
+        padding: 0.12rem 0.35rem;
+      }
+      .panel-b { padding: 0.55rem 0.65rem; flex: 1; }
+
+      /* Kanban mini */
+      .kb {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.35rem;
+        height: 100%;
+      }
+      .kb-col {
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 0.35rem;
+        min-height: 150px;
+      }
+      .kb-col h4 {
+        margin: 0 0 0.35rem;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--faint);
+      }
+      .kb-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 0.35rem 0.4rem;
+        margin-bottom: 0.3rem;
+        font-size: 10px;
+      }
+      .kb-card .k { color: var(--blue); font-weight: 700; }
+      .kb-card .t { color: var(--ink); display: block; margin-top: 0.1rem; }
+
+      /* Calendar mini */
+      .cal {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        font-size: 9px;
+        text-align: center;
+      }
+      .cal .hd { color: var(--faint); font-weight: 700; padding: 0.2rem 0; }
+      .cal .day {
+        aspect-ratio: 1;
+        border-radius: 4px;
+        display: grid;
+        place-items: center;
+        color: var(--mute);
+      }
+      .cal .day.on {
+        background: var(--blue-soft);
+        color: var(--blue-dark);
+        font-weight: 700;
+      }
+      .cal .day.dot::after {
+        content: "";
+        width: 3px; height: 3px;
+        border-radius: 50%;
+        background: var(--blue);
+        margin-top: -2px;
+      }
+      .cal-list {
+        margin-top: 0.45rem;
+        display: grid;
+        gap: 0.3rem;
+      }
+      .cal-item {
+        display: flex;
+        gap: 0.4rem;
+        align-items: baseline;
+        font-size: 10px;
+        padding: 0.3rem 0.35rem;
+        border-radius: 5px;
+        background: #f8fafc;
+      }
+      .cal-item .when { color: var(--faint); font-family: ui-monospace, monospace; min-width: 2.4rem; }
+
+      /* Activity */
+      .act { display: grid; gap: 0.4rem; }
+      .act-row {
+        display: grid;
+        grid-template-columns: 22px 1fr auto;
+        gap: 0.45rem;
+        align-items: start;
+        font-size: 11px;
+      }
+      .act-av {
+        width: 22px; height: 22px;
+        border-radius: 999px;
+        background: var(--blue-soft);
+        color: var(--blue-dark);
+        display: grid; place-items: center;
+        font-size: 9px; font-weight: 800;
+      }
+      .act-row .m { color: var(--faint); font-size: 10px; white-space: nowrap; }
+      .act-row strong { font-weight: 650; }
+
+      /* Extra panels */
+      .queue li, .due li, .wiki li {
+        list-style: none;
+        margin: 0;
+        padding: 0.35rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 11px;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .queue, .due, .wiki { margin: 0; padding: 0; }
+      .pill {
+        font-size: 9px;
+        font-weight: 700;
+        padding: 0.1rem 0.3rem;
+        border-radius: 4px;
+        background: var(--blue-soft);
+        color: var(--blue-dark);
+      }
+      .pill.warn { background: rgba(217, 119, 6, 0.12); color: var(--warn); }
+      .pill.ok { background: rgba(5, 150, 105, 0.12); color: var(--ok); }
+
+      /* Option variants */
+      .opt-b .kpi {
+        border-radius: 6px;
+        padding: 0.5rem 0.6rem;
+        background: color-mix(in srgb, var(--blue-soft) 35%, #fff);
+        border-color: transparent;
+      }
+      .opt-b .kpi .v { font-size: 1.2rem; color: var(--blue-dark); }
+      .opt-b .panel { border-radius: 6px; }
+      .opt-b .kb-col { background: #f1f5f9; }
+
+      .opt-c .desk { gap: 0.65rem; }
+      .opt-c .kpis { gap: 0.4rem; }
+      .opt-c .kpi {
+        border: 0;
+        border-bottom: 2px solid var(--blue);
+        border-radius: 0;
+        background: transparent;
+        padding: 0.35rem 0.15rem 0.5rem;
+      }
+      .opt-c .panel {
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .opt-d .desk {
+        background: #f4f5f7;
+        border: 0;
+      }
+      .opt-d .kpi, .opt-d .panel {
+        border-radius: 12px;
+        border-color: #e5e7eb;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+      }
+      .opt-d .kpi .v { letter-spacing: -0.04em; }
+
+      .opt-e .kpi-strip {
+        display: flex;
+        gap: 0.45rem;
+        overflow: auto;
+        padding-bottom: 0.15rem;
+      }
+      .opt-e .kpi {
+        min-width: 7.5rem;
+        flex: 1;
+        background: #0f172a;
+        border-color: #0f172a;
+        color: #fff;
+      }
+      .opt-e .kpi .l { color: #94a3b8; }
+      .opt-e .kpi .v { color: #fff; }
+      .opt-e .kpi .d { color: #86efac; }
+      .opt-e .kpi .d.down { color: #fca5a5; }
+
+      .spark {
+        display: flex;
+        align-items: end;
+        gap: 2px;
+        height: 18px;
+        margin-top: 0.35rem;
+      }
+      .spark i {
+        display: block;
+        width: 4px;
+        background: color-mix(in srgb, var(--blue) 55%, #cbd5e1);
+        border-radius: 1px;
+      }
+
+      .goal {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.65rem 0.8rem;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-size: 12px;
+      }
+      .goal strong { font-weight: 700; }
+      .goal .bar {
+        flex: 1;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .goal .bar > span {
+        display: block;
+        height: 100%;
+        width: 62%;
+        background: var(--blue);
+      }
+
+      footer.note {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 1.25rem 2.5rem;
+        color: var(--mute);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 900px) {
+        .kpis { grid-template-columns: repeat(2, 1fr); }
+        .row12 { grid-template-columns: 1fr; }
+        .c4, .c6, .c8, .c12 { grid-column: span 1; }
+        .kb { grid-template-columns: repeat(2, 1fr); }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-head">
+      <h1>Home layouts — KPI + Board / Calendar / Activity</h1>
+      <p>
+        Todas cumplen: <strong>fila de 5 KPIs</strong>, luego grid 12 con
+        <strong>Kanban 4 · Calendar 4 · Activity 4</strong>. La fila de abajo varía.
+        Elige A–E en el chat.
+      </p>
+      <p class="links">
+        <a href="/design/buttons/index.html">← Buttons</a>
+        ·
+        <a href="/design/dropdown/index.html">Dropdowns</a>
+      </p>
+      <nav class="toc" aria-label="Jump to option">
+        <a href="#a"><span class="letter">A</span> Classic desk</a>
+        <a href="#b"><span class="letter">B</span> Soft tonal KPIs</a>
+        <a href="#c"><span class="letter">C</span> Editorial hairline</a>
+        <a href="#d"><span class="letter">D</span> Beyond soft</a>
+        <a href="#e"><span class="letter">E</span> Dark KPI strip</a>
+      </nav>
+    </header>
+
+    <div class="stack">
+      <!-- A -->
+      <article class="opt" id="a">
+        <div class="opt-meta">
+          <h2><span class="letter">A</span> Classic desk</h2>
+          <p>KPIs blancos · 4/4/4 · abajo sprint goal + my queue + due soon. Cercano al home “For you” anterior.</p>
+          <div class="spec">12-col · board 4 · calendar 4 · activity 4 · extras 4+4+4</div>
+        </div>
+        <div class="mock">
+          <div class="desk">
+            <div class="kpis">
+              <div class="kpi"><div class="l">Open</div><div class="v">12</div><div class="d up">+2 this week</div></div>
+              <div class="kpi"><div class="l">In progress</div><div class="v">5</div><div class="d">Sprint 14</div></div>
+              <div class="kpi"><div class="l">In review</div><div class="v">3</div><div class="d">Needs you</div></div>
+              <div class="kpi"><div class="l">Tickets</div><div class="v">2</div><div class="d down">OPS-4 sev1</div></div>
+              <div class="kpi"><div class="l">Done</div><div class="v">7</div><div class="d up">62% sprint</div></div>
+            </div>
+            <div class="row12">
+              <section class="panel c4">
+                <div class="panel-h">Kanban <span class="tag">4 / 12</span></div>
+                <div class="panel-b">
+                  <div class="kb">
+                    <div class="kb-col"><h4>To do</h4><div class="kb-card"><span class="k">OPS-4</span><span class="t">Duplicate charge</span></div></div>
+                    <div class="kb-col"><h4>Doing</h4><div class="kb-card"><span class="k">OPS-1</span><span class="t">Checkout</span></div><div class="kb-card"><span class="k">OPS-2</span><span class="t">Retry</span></div></div>
+                    <div class="kb-col"><h4>Review</h4><div class="kb-card"><span class="k">OPS-3</span><span class="t">Idempotency</span></div></div>
+                    <div class="kb-col"><h4>Done</h4><div class="kb-card"><span class="k">OPS-6</span><span class="t">Close register</span></div></div>
+                  </div>
+                </div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Calendar <span class="tag">4 / 12</span></div>
+                <div class="panel-b">
+                  <div class="cal">
+                    <div class="hd">M</div><div class="hd">T</div><div class="hd">W</div><div class="hd">T</div><div class="hd">F</div><div class="hd">S</div><div class="hd">S</div>
+                    <div class="day"></div><div class="day"></div><div class="day">1</div><div class="day">2</div><div class="day on">3</div><div class="day">4</div><div class="day">5</div>
+                    <div class="day">6</div><div class="day dot">7</div><div class="day">8</div><div class="day dot">9</div><div class="day">10</div><div class="day">11</div><div class="day">12</div>
+                  </div>
+                  <div class="cal-list">
+                    <div class="cal-item"><span class="when">Tue</span> Sprint review</div>
+                    <div class="cal-item"><span class="when">Thu</span> OPS-3 due</div>
+                  </div>
+                </div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Activity <span class="tag">4 / 12</span></div>
+                <div class="panel-b">
+                  <div class="act">
+                    <div class="act-row"><span class="act-av">AS</span><div><strong>Ana</strong> moved OPS-3 to review</div><span class="m">2m</span></div>
+                    <div class="act-row"><span class="act-av">LM</span><div><strong>Luis</strong> commented on OPS-2</div><span class="m">18m</span></div>
+                    <div class="act-row"><span class="act-av">MV</span><div><strong>Marisol</strong> opened OPS-4</div><span class="m">1h</span></div>
+                    <div class="act-row"><span class="act-av">AS</span><div><strong>Ana</strong> logged 1h on OPS-1</div><span class="m">3h</span></div>
+                  </div>
+                </div>
+              </section>
+            </div>
+            <div class="goal"><strong>Sprint 14</strong><div class="bar"><span></span></div><span>62%</span></div>
+            <div class="row12">
+              <section class="panel c4" style="min-height:140px">
+                <div class="panel-h">My queue</div>
+                <div class="panel-b"><ul class="queue"><li>OPS-1 Checkout reliability <span class="pill">you</span></li><li>OPS-3 Idempotency key <span class="pill">review</span></li><li>OPS-6 Close the register <span class="pill ok">done</span></li></ul></div>
+              </section>
+              <section class="panel c4" style="min-height:140px">
+                <div class="panel-h">Due soon</div>
+                <div class="panel-b"><ul class="due"><li>OPS-3 · Thu <span class="pill warn">2d</span></li><li>OPS-2 · Fri <span class="pill">3d</span></li><li>WEB-3 · next week</li></ul></div>
+              </section>
+              <section class="panel c4" style="min-height:140px">
+                <div class="panel-h">Wiki pulse</div>
+                <div class="panel-b"><ul class="wiki"><li>Timeout decision updated</li><li>Payments runbook</li><li>Sprint 14 notes</li></ul></div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- B -->
+      <article class="opt opt-b" id="b">
+        <div class="opt-meta">
+          <h2><span class="letter">B</span> Soft tonal KPIs</h2>
+          <p>KPIs en soft azure (como el botón B) · mismo 4/4/4 · abajo helpdesk + assigned + releases.</p>
+          <div class="spec">Soft tonal strip · board 4 · calendar 4 · activity 4 · extras 4+4+4</div>
+        </div>
+        <div class="mock">
+          <div class="desk">
+            <div class="kpis">
+              <div class="kpi"><div class="l">Open</div><div class="v">12</div><div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:35%"></i><i style="height:70%"></i><i style="height:60%"></i><i style="height:80%"></i></div></div>
+              <div class="kpi"><div class="l">Doing</div><div class="v">5</div><div class="spark"><i style="height:30%"></i><i style="height:45%"></i><i style="height:50%"></i><i style="height:40%"></i><i style="height:65%"></i><i style="height:55%"></i></div></div>
+              <div class="kpi"><div class="l">Review</div><div class="v">3</div><div class="spark"><i style="height:20%"></i><i style="height:25%"></i><i style="height:40%"></i><i style="height:35%"></i><i style="height:50%"></i><i style="height:45%"></i></div></div>
+              <div class="kpi"><div class="l">Tickets</div><div class="v">2</div><div class="spark"><i style="height:60%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:30%"></i><i style="height:25%"></i><i style="height:35%"></i></div></div>
+              <div class="kpi"><div class="l">Velocity</div><div class="v">18</div><div class="spark"><i style="height:50%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:70%"></i><i style="height:65%"></i><i style="height:80%"></i></div></div>
+            </div>
+            <div class="row12">
+              <section class="panel c4">
+                <div class="panel-h">Board <span class="tag">kanban</span></div>
+                <div class="panel-b"><div class="kb">
+                  <div class="kb-col"><h4>To do</h4><div class="kb-card"><span class="k">OPS-4</span><span class="t">Timeout charge</span></div></div>
+                  <div class="kb-col"><h4>Doing</h4><div class="kb-card"><span class="k">OPS-1</span><span class="t">Checkout</span></div></div>
+                  <div class="kb-col"><h4>Review</h4><div class="kb-card"><span class="k">OPS-3</span><span class="t">Key store</span></div></div>
+                  <div class="kb-col"><h4>Done</h4><div class="kb-card"><span class="k">OPS-6</span><span class="t">Register</span></div></div>
+                </div></div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Calendar</div>
+                <div class="panel-b">
+                  <div class="cal">
+                    <div class="hd">M</div><div class="hd">T</div><div class="hd">W</div><div class="hd">T</div><div class="hd">F</div><div class="hd">S</div><div class="hd">S</div>
+                    <div class="day">3</div><div class="day on">4</div><div class="day">5</div><div class="day dot">6</div><div class="day">7</div><div class="day">8</div><div class="day">9</div>
+                  </div>
+                  <div class="cal-list"><div class="cal-item"><span class="when">Wed</span> Planning</div><div class="cal-item"><span class="when">Fri</span> Demo</div></div>
+                </div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Activity</div>
+                <div class="panel-b"><div class="act">
+                  <div class="act-row"><span class="act-av">AS</span><div><strong>Ana</strong> reviewed OPS-3</div><span class="m">now</span></div>
+                  <div class="act-row"><span class="act-av">LM</span><div><strong>Luis</strong> started OPS-2</div><span class="m">12m</span></div>
+                  <div class="act-row"><span class="act-av">MV</span><div><strong>Marisol</strong> filed ticket</div><span class="m">40m</span></div>
+                </div></div>
+              </section>
+            </div>
+            <div class="row12">
+              <section class="panel c4" style="min-height:120px"><div class="panel-h">Helpdesk</div><div class="panel-b"><ul class="queue"><li>HD-12 Portal timeout <span class="pill warn">sla</span></li><li>HD-9 Billing copy</li></ul></div></section>
+              <section class="panel c4" style="min-height:120px"><div class="panel-h">Assigned to me</div><div class="panel-b"><ul class="queue"><li>OPS-1 · in progress</li><li>OPS-3 · in review</li></ul></div></section>
+              <section class="panel c4" style="min-height:120px"><div class="panel-h">Releases</div><div class="panel-b"><ul class="wiki"><li>v0.1.4 · draft</li><li>Payments hotfix · shipped</li></ul></div></section>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- C -->
+      <article class="opt opt-c" id="c">
+        <div class="opt-meta">
+          <h2><span class="letter">C</span> Editorial hairline</h2>
+          <p>KPIs sin caja, subrayados azure · paneles cuadrados sin radio · fila inferior my work + blockers.</p>
+          <div class="spec">Hairline · board 4 · calendar 4 · activity 4 · extras 6+6</div>
+        </div>
+        <div class="mock">
+          <div class="desk">
+            <div class="kpis">
+              <div class="kpi"><div class="l">Open</div><div class="v">12</div></div>
+              <div class="kpi"><div class="l">Doing</div><div class="v">5</div></div>
+              <div class="kpi"><div class="l">Review</div><div class="v">3</div></div>
+              <div class="kpi"><div class="l">Tickets</div><div class="v">2</div></div>
+              <div class="kpi"><div class="l">Blocked</div><div class="v">1</div></div>
+            </div>
+            <div class="row12">
+              <section class="panel c4">
+                <div class="panel-h">Kanban board</div>
+                <div class="panel-b"><div class="kb">
+                  <div class="kb-col"><h4>Todo</h4><div class="kb-card"><span class="k">OPS-4</span><span class="t">Duplicate charge</span></div></div>
+                  <div class="kb-col"><h4>Doing</h4><div class="kb-card"><span class="k">OPS-1</span><span class="t">Checkout</span></div></div>
+                  <div class="kb-col"><h4>Review</h4><div class="kb-card"><span class="k">OPS-3</span><span class="t">Key</span></div></div>
+                  <div class="kb-col"><h4>Done</h4><div class="kb-card"><span class="k">OPS-6</span><span class="t">Register</span></div></div>
+                </div></div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Calendar</div>
+                <div class="panel-b">
+                  <div class="cal">
+                    <div class="hd">M</div><div class="hd">T</div><div class="hd">W</div><div class="hd">T</div><div class="hd">F</div><div class="hd">S</div><div class="hd">S</div>
+                    <div class="day">10</div><div class="day">11</div><div class="day on">12</div><div class="day">13</div><div class="day dot">14</div><div class="day">15</div><div class="day">16</div>
+                  </div>
+                  <div class="cal-list"><div class="cal-item"><span class="when">Fri</span> Sprint end</div></div>
+                </div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Activity</div>
+                <div class="panel-b"><div class="act">
+                  <div class="act-row"><span class="act-av">AS</span><div>Status → review on OPS-3</div><span class="m">4m</span></div>
+                  <div class="act-row"><span class="act-av">LM</span><div>Comment on OPS-2</div><span class="m">22m</span></div>
+                  <div class="act-row"><span class="act-av">MV</span><div>Created OPS-4</div><span class="m">1h</span></div>
+                </div></div>
+              </section>
+            </div>
+            <div class="row12">
+              <section class="panel c6" style="min-height:120px"><div class="panel-h">My work</div><div class="panel-b"><ul class="queue"><li>OPS-1 Checkout reliability</li><li>OPS-3 Store the idempotency key</li></ul></div></section>
+              <section class="panel c6" style="min-height:120px"><div class="panel-h">Blockers</div><div class="panel-b"><ul class="due"><li>OPS-4 waiting gateway timeout repro <span class="pill warn">sev1</span></li></ul></div></section>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- D -->
+      <article class="opt opt-d" id="d">
+        <div class="opt-meta">
+          <h2><span class="letter">D</span> Beyond soft</h2>
+          <p>Lenguaje Beyond actual (radios 12, sombra suave) · 4/4/4 · abajo focus list ancha + team load.</p>
+          <div class="spec">Beyond tokens · board 4 · calendar 4 · activity 4 · extras 8+4</div>
+        </div>
+        <div class="mock">
+          <div class="desk">
+            <div class="kpis">
+              <div class="kpi"><div class="l">Open</div><div class="v">12</div><div class="d">Across OPS</div></div>
+              <div class="kpi"><div class="l">In progress</div><div class="v">5</div><div class="d up">On track</div></div>
+              <div class="kpi"><div class="l">In review</div><div class="v">3</div><div class="d">2 need you</div></div>
+              <div class="kpi"><div class="l">Tickets</div><div class="v">2</div><div class="d">Sev1 live</div></div>
+              <div class="kpi"><div class="l">Sprint</div><div class="v">62%</div><div class="d up">+8 pts</div></div>
+            </div>
+            <div class="row12">
+              <section class="panel c4">
+                <div class="panel-h">Kanban <span class="tag">Sprint 14</span></div>
+                <div class="panel-b"><div class="kb">
+                  <div class="kb-col"><h4>To do</h4><div class="kb-card"><span class="k">OPS-4</span><span class="t">Duplicate charge</span></div></div>
+                  <div class="kb-col"><h4>Doing</h4><div class="kb-card"><span class="k">OPS-1</span><span class="t">Checkout</span></div><div class="kb-card"><span class="k">OPS-2</span><span class="t">Retry</span></div></div>
+                  <div class="kb-col"><h4>Review</h4><div class="kb-card"><span class="k">OPS-3</span><span class="t">Idempotency</span></div></div>
+                  <div class="kb-col"><h4>Done</h4><div class="kb-card"><span class="k">OPS-6</span><span class="t">Register</span></div></div>
+                </div></div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Calendar</div>
+                <div class="panel-b">
+                  <div class="cal">
+                    <div class="hd">M</div><div class="hd">T</div><div class="hd">W</div><div class="hd">T</div><div class="hd">F</div><div class="hd">S</div><div class="hd">S</div>
+                    <div class="day">1</div><div class="day">2</div><div class="day on">3</div><div class="day">4</div><div class="day dot">5</div><div class="day">6</div><div class="day">7</div>
+                    <div class="day">8</div><div class="day">9</div><div class="day">10</div><div class="day">11</div><div class="day">12</div><div class="day">13</div><div class="day">14</div>
+                  </div>
+                  <div class="cal-list"><div class="cal-item"><span class="when">Fri</span> Demo day</div><div class="cal-item"><span class="when">Mon</span> Retro</div></div>
+                </div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Activity</div>
+                <div class="panel-b"><div class="act">
+                  <div class="act-row"><span class="act-av">AS</span><div><strong>Ana</strong> updated OPS-1</div><span class="m">5m</span></div>
+                  <div class="act-row"><span class="act-av">LM</span><div><strong>Luis</strong> linked WEB-3</div><span class="m">25m</span></div>
+                  <div class="act-row"><span class="act-av">MV</span><div><strong>Marisol</strong> watched OPS-4</div><span class="m">1h</span></div>
+                </div></div>
+              </section>
+            </div>
+            <div class="row12">
+              <section class="panel c8" style="min-height:130px">
+                <div class="panel-h">Focus · assigned to you</div>
+                <div class="panel-b"><ul class="queue">
+                  <li>OPS-1 Checkout reliability <span class="pill">in progress</span></li>
+                  <li>OPS-3 Store the idempotency key <span class="pill">in review</span></li>
+                  <li>OPS-6 Close the register <span class="pill ok">done</span></li>
+                </ul></div>
+              </section>
+              <section class="panel c4" style="min-height:130px">
+                <div class="panel-h">Team load</div>
+                <div class="panel-b"><ul class="wiki">
+                  <li>Ana · 3 open</li>
+                  <li>Luis · 2 open</li>
+                  <li>Marisol · 1 ticket</li>
+                </ul></div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- E -->
+      <article class="opt opt-e" id="e">
+        <div class="opt-meta">
+          <h2><span class="letter">E</span> Dark KPI strip</h2>
+          <p>KPI strip oscura (contraste fuerte) · 4/4/4 claro debajo · abajo roadmap snapshot + inbox.</p>
+          <div class="spec">Dark strip · board 4 · calendar 4 · activity 4 · extras 6+6</div>
+        </div>
+        <div class="mock">
+          <div class="desk">
+            <div class="kpi-strip">
+              <div class="kpi"><div class="l">Open</div><div class="v">12</div><div class="d up">+2</div></div>
+              <div class="kpi"><div class="l">Doing</div><div class="v">5</div><div class="d">Steady</div></div>
+              <div class="kpi"><div class="l">Review</div><div class="v">3</div><div class="d">2 yours</div></div>
+              <div class="kpi"><div class="l">Tickets</div><div class="v">2</div><div class="d down">Sev1</div></div>
+              <div class="kpi"><div class="l">Done</div><div class="v">7</div><div class="d up">62%</div></div>
+              <div class="kpi"><div class="l">SLA</div><div class="v">98%</div><div class="d up">ok</div></div>
+            </div>
+            <div class="row12">
+              <section class="panel c4">
+                <div class="panel-h">Kanban</div>
+                <div class="panel-b"><div class="kb">
+                  <div class="kb-col"><h4>To do</h4><div class="kb-card"><span class="k">OPS-4</span><span class="t">Charge</span></div></div>
+                  <div class="kb-col"><h4>Doing</h4><div class="kb-card"><span class="k">OPS-1</span><span class="t">Checkout</span></div></div>
+                  <div class="kb-col"><h4>Review</h4><div class="kb-card"><span class="k">OPS-3</span><span class="t">Key</span></div></div>
+                  <div class="kb-col"><h4>Done</h4><div class="kb-card"><span class="k">OPS-6</span><span class="t">Close</span></div></div>
+                </div></div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Calendar</div>
+                <div class="panel-b">
+                  <div class="cal">
+                    <div class="hd">M</div><div class="hd">T</div><div class="hd">W</div><div class="hd">T</div><div class="hd">F</div><div class="hd">S</div><div class="hd">S</div>
+                    <div class="day">17</div><div class="day">18</div><div class="day on">19</div><div class="day">20</div><div class="day">21</div><div class="day">22</div><div class="day">23</div>
+                  </div>
+                  <div class="cal-list"><div class="cal-item"><span class="when">Wed</span> Sync</div></div>
+                </div>
+              </section>
+              <section class="panel c4">
+                <div class="panel-h">Activity</div>
+                <div class="panel-b"><div class="act">
+                  <div class="act-row"><span class="act-av">AS</span><div><strong>Ana</strong> closed OPS-6</div><span class="m">1h</span></div>
+                  <div class="act-row"><span class="act-av">LM</span><div><strong>Luis</strong> pushed OPS-2</div><span class="m">2h</span></div>
+                </div></div>
+              </section>
+            </div>
+            <div class="row12">
+              <section class="panel c6" style="min-height:120px"><div class="panel-h">Roadmap slice</div><div class="panel-b"><ul class="wiki"><li>Payments reliability · Nov</li><li>Portal SLA · Dec</li><li>Storefront a11y · Q1</li></ul></div></section>
+              <section class="panel c6" style="min-height:120px"><div class="panel-h">Inbox</div><div class="panel-b"><ul class="queue"><li>Mention on OPS-3 <span class="pill">new</span></li><li>Watch OPS-4 updated</li></ul></div></section>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <footer class="note">
+      Responde con la letra (ej. <strong>D</strong> o “B con el bottom de A”). Luego lo implemento en el Home real.
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,2471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quetzal — Dashboards UX Concepts (A–F)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Quetzal DS tokens ── */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #e8edf4;
+  --layer-hover: #eef2f7;
+  --border: #e5e7eb;
+  --border-strong: #c4cad3;
+  --text: #0f172a;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --accent-soft: rgba(37, 99, 235, 0.12);
+  --plume: #3b82f6;
+  --ok: #059669;
+  --warn: #d97706;
+  --error: #dc2626;
+  --info: #2563eb;
+  --today: #dc2626;
+  --today-soft: rgba(220, 38, 38, 0.08);
+  --radius: 0;
+  --font: "JetBrains Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  background:
+    radial-gradient(1100px 480px at 10% -12%, rgba(37,99,235,0.08), transparent 55%),
+    radial-gradient(800px 420px at 96% 0%, rgba(59,130,246,0.05), transparent 50%),
+    var(--bg);
+  letter-spacing: -0.01em;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: var(--font); }
+
+/* ── Page shell ── */
+.page-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+h1 { font-size: 22px; font-weight: 700; margin-bottom: 0.15rem; }
+.page-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Quick nav ── */
+.quick-nav {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.quick-nav a {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  border-right: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.quick-nav a:last-child { border-right: 0; }
+.quick-nav a:hover { background: var(--layer-hover); text-decoration: none; }
+.quick-nav .letter {
+  display: inline-block;
+  width: 1.35em;
+  height: 1.35em;
+  line-height: 1.35em;
+  text-align: center;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  margin-right: 0.35rem;
+}
+
+/* ── Concept section ── */
+.concept {
+  margin-bottom: 2.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.concept-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.concept-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  font-size: 15px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  flex-shrink: 0;
+}
+.concept-head h2 { font-size: 16px; font-weight: 600; }
+.concept-head .scope {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.concept-head .scope.sprint { background: #e0ecff; color: #1d4ed8; }
+.concept-head .scope.personal { background: #ecfdf5; color: #047857; }
+.concept-head .scope.project { background: #fef3c7; color: #92400e; }
+.concept-head .thesis {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+  max-width: 46%;
+  text-align: right;
+}
+.concept-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.concept-meta div { padding: 0.55rem 1rem; font-size: 12px; }
+.concept-meta div:first-child { border-right: 1px solid var(--border); }
+.concept-meta strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+.concept-mock {
+  padding: 1rem;
+  background: var(--bg);
+  min-height: 300px;
+  overflow-x: auto;
+}
+.state-strip {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.state-strip .pill {
+  padding: 0.15rem 0.45rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+.state-strip .pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── Comparison table ── */
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+.cmp-table th, .cmp-table td {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.cmp-table th {
+  background: var(--surface-2);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.cmp-table td:first-child {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Tag helpers ── */
+.tag { display: inline-block; padding: 0.1rem 0.4rem; font-size: 10px; font-weight: 500; }
+.tag--epic { background: #eef2ff; color: #3b5998; }
+.tag--story { background: #ecfdf5; color: #059669; }
+.tag--task { background: var(--surface-2); color: var(--muted); }
+.tag--bug { background: #fef2f2; color: #dc2626; }
+.tag--ticket { background: #fff7ed; color: #c2410c; }
+.tag--todo { background: var(--surface-2); color: var(--muted); }
+.tag--ip { background: #dbeafe; color: #1d4ed8; }
+.tag--done { background: #d1fae5; color: #059669; }
+.tag--review { background: #fef3c7; color: #92400e; }
+.tag--high { color: #dc2626; font-weight: 600; }
+.tag--med { color: var(--warn); font-weight: 600; }
+.tag--low { color: var(--faint); }
+.tag--muted { background: var(--surface-2); color: var(--muted); }
+.tag--cmp { background: #e0ecff; color: #1d4ed8; padding: 0.05rem 0.35rem; }
+.tag--cmp-reg { background: #fde8d4; color: #c2410c; }
+.key {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 11px;
+}
+
+/* ── Mock toolbar ── */
+.mock-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  background: var(--surface);
+  font-size: 11px;
+}
+.mock-toolbar .seg { display: inline-flex; border: 1px solid var(--border); }
+.mock-toolbar .seg button {
+  background: var(--surface);
+  border: 0;
+  border-right: 1px solid var(--border);
+  padding: 0.25rem 0.55rem;
+  font: inherit;
+  font-size: 11px;
+  cursor: default;
+  color: var(--text);
+}
+.mock-toolbar .seg button:last-child { border-right: 0; }
+.mock-toolbar .seg button.is-on {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.mock-toolbar .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+.mock-toolbar .chip.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.mock-toolbar .spacer { flex: 1; }
+.mock-toolbar .btn {
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--text);
+}
+.mock-toolbar .btn--primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT A — Gadget Grid + Add drawer
+   ────────────────────────────────────────────── */
+.ga-shell {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.ga-main { padding: 0.75rem; border-right: 1px solid var(--border); }
+.ga-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+.ga-head .title { font-size: 14px; font-weight: 700; }
+.ga-head .meta { font-size: 10px; color: var(--muted); }
+.ga-head .spacer { flex: 1; }
+.ga-head .btn {
+  padding: 0.2rem 0.5rem;
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.ga-head .btn.is-on { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+
+.ga-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.gadget {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+.gadget.is-focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+.gadget-head {
+  padding: 0.4rem 0.55rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  background: var(--surface-2);
+}
+.gadget-head .ttl { font-weight: 600; }
+.gadget-head .ty { color: var(--muted); font-size: 10px; }
+.gadget-head .drag {
+  margin-left: auto;
+  color: var(--faint);
+  cursor: default;
+  letter-spacing: 1px;
+  font-size: 12px;
+}
+.gadget-body { padding: 0.55rem; font-size: 11px; }
+.stat-num {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.02em;
+}
+.stat-num.ok { color: var(--ok); }
+.stat-num.warn { color: var(--warn); }
+.stat-num.err { color: var(--error); }
+.stat-num .delta {
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 0.4rem;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.stat-sub { font-size: 10px; color: var(--muted); }
+
+/* status bars */
+.agg-row { display: grid; grid-template-columns: 60px 1fr 24px; gap: 0.4rem; align-items: center; margin-bottom: 2px; font-size: 10px; }
+.agg-row .lbl { color: var(--muted); }
+.agg-track { height: 6px; background: var(--surface-2); overflow: hidden; }
+.agg-fill { height: 100%; }
+.agg-fill.todo { background: var(--faint); }
+.agg-fill.ip { background: var(--accent); }
+.agg-fill.review { background: var(--warn); }
+.agg-fill.done { background: var(--ok); }
+.agg-row .n { text-align: right; font-weight: 600; }
+
+/* activity list */
+.act-list { display: flex; flex-direction: column; gap: 0.25rem; }
+.act-item {
+  display: grid;
+  grid-template-columns: 46px 1fr 44px;
+  gap: 0.3rem;
+  font-size: 10px;
+  padding: 0.2rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+.act-item:last-child { border-bottom: 0; }
+.act-item .k { color: var(--accent); font-weight: 600; }
+.act-item .msg { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act-item .when { color: var(--muted); text-align: right; font-size: 9px; }
+
+/* SLA list */
+.sla-list { display: flex; flex-direction: column; gap: 0.2rem; font-size: 10px; }
+.sla-item {
+  display: grid;
+  grid-template-columns: 54px 60px 1fr;
+  gap: 0.3rem;
+  padding: 0.15rem 0;
+  border-bottom: 1px dashed var(--border);
+  align-items: center;
+}
+.sla-item:last-child { border-bottom: 0; }
+
+/* ── A — Drawer ── */
+.ga-drawer {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+.ga-drawer-head {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-2);
+}
+.ga-drawer-head .ttl { font-weight: 600; font-size: 12px; }
+.ga-drawer-head .x { margin-left: auto; color: var(--muted); cursor: default; }
+.ga-drawer-list { padding: 0.5rem; }
+.ga-drawer-list h5 {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 0.3rem 0 0.3rem;
+}
+.ga-pick {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.5rem;
+  margin-bottom: 0.3rem;
+  background: var(--surface);
+  cursor: default;
+  font-size: 11px;
+}
+.ga-pick:hover { background: var(--layer-hover); }
+.ga-pick.is-sel { border-color: var(--accent); background: var(--accent-soft); }
+.ga-pick .nm { font-weight: 600; display: block; }
+.ga-pick .d { font-size: 10px; color: var(--muted); display: block; margin-top: 0.1rem; }
+.ga-drawer-foot {
+  margin-top: auto;
+  padding: 0.5rem 0.65rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex;
+  gap: 0.4rem;
+}
+.ga-drawer-foot .btn {
+  padding: 0.3rem 0.6rem;
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.ga-drawer-foot .btn--primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT B — Sprint Health Desk
+   ────────────────────────────────────────────── */
+.sh-shell {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.sh-head {
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.sh-head .vname { font-size: 15px; font-weight: 700; }
+.sh-head .goal { font-size: 11px; color: var(--muted); }
+.sh-head .cd {
+  font-size: 10px;
+  padding: 0.15rem 0.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.sh-head .cd.hot { color: var(--warn); border-color: var(--warn); }
+.sh-kpi {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+.sh-kpi > div {
+  padding: 0.55rem 0.7rem;
+  border-right: 1px solid var(--border);
+  font-size: 11px;
+}
+.sh-kpi > div:last-child { border-right: 0; }
+.sh-kpi .lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+.sh-kpi .v {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+.sh-kpi .v.ok { color: var(--ok); }
+.sh-kpi .v.warn { color: var(--warn); }
+.sh-kpi .v.err { color: var(--error); }
+.sh-kpi .sub { font-size: 10px; color: var(--muted); margin-top: 0.1rem; }
+
+.sh-body {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 0;
+}
+.sh-left { padding: 0.75rem; border-right: 1px solid var(--border); }
+.sh-right { padding: 0.75rem; }
+.sh-left h3, .sh-right h3 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+/* Burndown chart */
+.bd-chart {
+  position: relative;
+  height: 170px;
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(to right, var(--border) 1px, transparent 1px) 0 0 / 14.28% 100%,
+    linear-gradient(to top, var(--border) 1px, transparent 1px) 0 0 / 100% 25%,
+    var(--surface);
+  padding: 0.5rem;
+}
+.bd-axis-y {
+  position: absolute;
+  left: -22px;
+  top: 0.3rem;
+  bottom: 0.3rem;
+  width: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 2px;
+}
+.bd-axis-x {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 2px;
+  padding: 0 0.5rem;
+}
+.bd-axis-x > span { text-align: center; }
+.bd-chart svg { display: block; width: 100%; height: 100%; }
+.bd-leg {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  font-size: 10px;
+  color: var(--muted);
+}
+.bd-leg .sw {
+  display: inline-block;
+  width: 10px;
+  height: 2px;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+.bd-leg .sw.ideal { background: var(--faint); }
+.bd-leg .sw.real { background: var(--accent); }
+.bd-leg .sw.scope { background: var(--warn); }
+
+/* Scope / commitment */
+.sh-commit {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+.sh-commit .box {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.5rem;
+  background: var(--surface);
+}
+.sh-commit .box .lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.sh-commit .box .big {
+  font-size: 16px;
+  font-weight: 700;
+}
+.sh-commit .box .delta {
+  font-size: 10px;
+  color: var(--warn);
+}
+.sh-commit .box .track {
+  height: 4px;
+  background: var(--surface-2);
+  margin-top: 0.3rem;
+}
+.sh-commit .box .fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+/* Blockers */
+.blk-list { display: flex; flex-direction: column; gap: 0.35rem; }
+.blk {
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  background: #fef2f2;
+  border-left: 3px solid var(--error);
+  font-size: 11px;
+  align-items: center;
+}
+.blk .sum { color: var(--text); }
+.blk .meta { font-size: 9px; color: var(--muted); text-align: right; }
+.blk.warn { background: #fff7ed; border-left-color: var(--warn); }
+
+/* ──────────────────────────────────────────────
+   CONCEPT C — Personal Home
+   ────────────────────────────────────────────── */
+.ph-shell {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 0.75rem;
+}
+.ph-main, .ph-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.ph-greet {
+  padding: 0.75rem 0.85rem;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff;
+  border: 1px solid var(--accent-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ph-greet .av {
+  width: 44px;
+  height: 44px;
+  background: #fff;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+.ph-greet h2 { font-size: 16px; font-weight: 700; margin-bottom: 0.1rem; }
+.ph-greet .sub { font-size: 11px; opacity: 0.85; }
+.ph-greet .right {
+  margin-left: auto;
+  font-size: 11px;
+  text-align: right;
+  opacity: 0.9;
+}
+
+.ph-focus {
+  padding: 0.6rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.ph-focus .lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+}
+.ph-focus .focus-ttl { font-size: 13px; font-weight: 600; }
+.ph-focus .focus-sub { font-size: 10px; color: var(--muted); }
+.ph-focus .btn {
+  margin-left: auto;
+  padding: 0.3rem 0.65rem;
+  font-size: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  font-weight: 600;
+  cursor: default;
+}
+
+.ph-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.ph-panel-head {
+  padding: 0.4rem 0.6rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  font-weight: 600;
+}
+.ph-panel-head .n {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 10px;
+}
+.ph-panel-body { padding: 0.4rem 0.6rem; font-size: 11px; }
+
+.ph-work { display: flex; flex-direction: column; }
+.ph-work-row {
+  display: grid;
+  grid-template-columns: 46px 60px 1fr 70px 50px;
+  gap: 0.4rem;
+  padding: 0.3rem 0.1rem;
+  border-bottom: 1px dashed var(--border);
+  align-items: center;
+  font-size: 11px;
+}
+.ph-work-row:last-child { border-bottom: 0; }
+.ph-work-row.is-due { background: #fff7ed; }
+.ph-work-row .sum { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ph-work-row .due { font-size: 10px; color: var(--muted); text-align: right; }
+.ph-work-row .due.hot { color: var(--error); font-weight: 600; }
+.ph-work-row .pts { text-align: right; font-size: 10px; color: var(--muted); }
+
+/* Mentions */
+.mention {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 11px;
+}
+.mention:last-child { border-bottom: 0; }
+.mention .av {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+.mention .body { flex: 1; min-width: 0; }
+.mention .who { font-weight: 600; }
+.mention .where { color: var(--muted); font-size: 10px; }
+.mention .snip { color: var(--muted); font-size: 10px; }
+.mention .when { color: var(--faint); font-size: 9px; text-align: right; flex-shrink: 0; }
+
+/* Timeline today */
+.ph-tl { display: flex; flex-direction: column; }
+.ph-tl-slot {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 0.4rem;
+  padding: 0.25rem 0.1rem;
+  border-bottom: 1px dashed var(--border);
+  font-size: 11px;
+  align-items: center;
+}
+.ph-tl-slot:last-child { border-bottom: 0; }
+.ph-tl-slot .t { font-size: 10px; color: var(--muted); }
+.ph-tl-slot.is-now { background: var(--today-soft); }
+.ph-tl-slot.is-now .t { color: var(--today); font-weight: 700; }
+.ph-tl-slot .ev { display: flex; align-items: center; gap: 0.3rem; }
+.ph-tl-slot .ev .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  display: inline-block;
+  flex-shrink: 0;
+}
+.ph-tl-slot .ev .dot.focus { background: var(--warn); }
+.ph-tl-slot .ev .dot.mtg { background: var(--muted); }
+
+/* Streak */
+.ph-streak {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 2px;
+  margin-top: 0.25rem;
+}
+.ph-streak .box {
+  height: 14px;
+  background: var(--surface-2);
+}
+.ph-streak .box.l1 { background: #c7ddf9; }
+.ph-streak .box.l2 { background: #8bb5f0; }
+.ph-streak .box.l3 { background: var(--accent); }
+.ph-streak .box.today { outline: 1px solid var(--today); outline-offset: -1px; }
+
+/* ──────────────────────────────────────────────
+   CONCEPT D — Template Gallery Create flow
+   ────────────────────────────────────────────── */
+.tg-shell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1rem;
+}
+.tg-steps {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+  font-size: 10px;
+  color: var(--muted);
+}
+.tg-step {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.tg-step.is-on {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.tg-step.is-done { background: var(--surface); color: var(--ok); }
+.tg-step.is-done::before { content: "✓ "; }
+
+.tg-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+.tg-sub { font-size: 11px; color: var(--muted); margin-bottom: 0.75rem; }
+
+.tg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+.tg-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+}
+.tg-card.is-sel { border: 2px solid var(--accent); margin: -1px; }
+.tg-card .thumb {
+  height: 130px;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+.tg-card .thumb .mini {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2px 4px;
+  font-size: 8px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.tg-card .thumb .bar {
+  position: absolute;
+  background: var(--accent);
+  height: 3px;
+}
+.tg-card .thumb .big-n {
+  position: absolute;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font);
+}
+.tg-card .body {
+  padding: 0.5rem 0.6rem;
+}
+.tg-card .scope {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--surface-2);
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.tg-card .scope.sprint { background: #e0ecff; color: #1d4ed8; }
+.tg-card .scope.personal { background: #ecfdf5; color: #047857; }
+.tg-card .scope.project { background: #fef3c7; color: #92400e; }
+.tg-card .scope.blank { background: var(--surface-2); color: var(--muted); }
+.tg-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 0.15rem; }
+.tg-card .d { font-size: 10px; color: var(--muted); line-height: 1.45; }
+.tg-card .inc { margin-top: 0.4rem; font-size: 10px; color: var(--muted); }
+.tg-card .inc strong { color: var(--text); font-weight: 600; }
+
+.tg-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+.tg-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 11px;
+}
+.tg-form label span {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.tg-form input, .tg-form select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+}
+.tg-form button {
+  align-self: end;
+  padding: 0.4rem 0.9rem;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: default;
+}
+
+/* Empty states */
+.d-empty {
+  background: var(--surface);
+  border: 2px dashed var(--border-strong);
+  padding: 1.5rem;
+  text-align: center;
+}
+.d-empty .ico {
+  font-size: 24px;
+  color: var(--faint);
+  margin-bottom: 0.3rem;
+}
+.d-empty h4 { font-size: 13px; font-weight: 600; margin-bottom: 0.2rem; }
+.d-empty p { font-size: 11px; color: var(--muted); margin-bottom: 0.65rem; }
+.d-empty .ctas { display: inline-flex; gap: 0.4rem; }
+.d-empty .btn {
+  padding: 0.3rem 0.7rem;
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.d-empty .btn--primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────────
+   CONCEPT E — Mosaic KPI wall
+   ────────────────────────────────────────────── */
+.mw-shell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+}
+.mw-mode {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  font-size: 11px;
+  padding: 0.4rem 0.5rem;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+}
+.mw-mode .pulse {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mw-mode .spacer { flex: 1; }
+.mw-mode .btn {
+  padding: 0.2rem 0.55rem;
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.mw-mode .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+
+.mw-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: 70px;
+  gap: 0.4rem;
+}
+.mw-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.6rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mw-tile.is-edit {
+  border: 1px dashed var(--accent);
+  cursor: default;
+}
+.mw-tile.is-edit::before {
+  content: "⋮⋮";
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: -2px;
+}
+.mw-tile .handle-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background:
+    linear-gradient(135deg, transparent 0 50%, var(--accent) 50% 60%, transparent 60% 70%, var(--accent) 70% 80%, transparent 80% 90%, var(--accent) 90% 100%);
+}
+.mw-tile .lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 0.1rem;
+}
+.mw-tile .big {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.mw-tile .big.ok { color: var(--ok); }
+.mw-tile .big.warn { color: var(--warn); }
+.mw-tile .big.err { color: var(--error); }
+.mw-tile .sm { font-size: 10px; color: var(--muted); margin-top: 0.2rem; }
+.mw-tile .delta.up { color: var(--ok); font-size: 10px; }
+.mw-tile .delta.dn { color: var(--error); font-size: 10px; }
+
+/* spark */
+.mw-tile .spark {
+  margin-top: auto;
+  height: 24px;
+}
+
+/* mini bars */
+.mw-bars { display: flex; align-items: flex-end; gap: 2px; height: 32px; margin-top: 0.3rem; }
+.mw-bars .bar { flex: 1; background: var(--accent); }
+.mw-bars .bar.lo { background: var(--surface-2); }
+
+/* grid spans */
+.sp-3 { grid-column: span 3; }
+.sp-4 { grid-column: span 4; }
+.sp-5 { grid-column: span 5; }
+.sp-6 { grid-column: span 6; }
+.sp-8 { grid-column: span 8; }
+.sr-2 { grid-row: span 2; }
+.sr-3 { grid-row: span 3; }
+
+/* ──────────────────────────────────────────────
+   CONCEPT F — Sidebar + live preview
+   ────────────────────────────────────────────── */
+.sb-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  min-height: 420px;
+}
+.sb-rail {
+  border-right: 1px solid var(--border);
+  background: var(--surface-2);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.sb-search {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.4rem;
+}
+.sb-search input {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font: inherit;
+  font-size: 11px;
+}
+.sb-search .btn {
+  padding: 0.3rem 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: default;
+}
+.sb-sec h4 {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  margin: 0.5rem 0 0.2rem 0.2rem;
+}
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem;
+  font-size: 11px;
+  cursor: default;
+  background: transparent;
+  border-left: 2px solid transparent;
+}
+.sb-item:hover { background: var(--layer-hover); }
+.sb-item.is-sel {
+  background: var(--surface);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.sb-item .ico {
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sb-item .ico.sprint { background: #1d4ed8; }
+.sb-item .ico.personal { background: var(--ok); }
+.sb-item .ico.project { background: var(--warn); }
+.sb-item .ico.shared { background: var(--muted); }
+.sb-item .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-item .n { font-size: 9px; color: var(--muted); }
+.sb-item .star { color: var(--warn); font-size: 10px; }
+.sb-new {
+  margin-top: auto;
+  padding: 0.4rem 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  text-align: center;
+  font-weight: 600;
+  font-size: 11px;
+  cursor: default;
+}
+
+.sb-preview {
+  padding: 0.75rem;
+  overflow: hidden;
+}
+.sb-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.sb-preview-head .ttl { font-size: 15px; font-weight: 700; }
+.sb-preview-head .meta { font-size: 10px; color: var(--muted); }
+.sb-preview-head .act { margin-left: auto; display: flex; gap: 0.3rem; }
+.sb-preview-head .act .btn {
+  padding: 0.2rem 0.5rem;
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.sb-preview-head .act .btn.pin { color: var(--warn); }
+.sb-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.sb-preview-grid .sp-full { grid-column: 1 / -1; }
+
+/* ── Scope legend chip ── */
+.scope-legend {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+  font-size: 11px;
+  color: var(--muted);
+}
+.scope-legend .k {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.scope-legend .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+}
+.scope-legend .dot.sprint { background: #1d4ed8; }
+.scope-legend .dot.personal { background: var(--ok); }
+.scope-legend .dot.project { background: var(--warn); }
+
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <h1>Dashboards — UX Concepts</h1>
+  <p class="page-sub">
+    QUETZAL-UX-DASHBOARDS-6 · 6 design directions for <code>/dashboards</code> · covers sprint, personal, project scopes · pick a letter to implement
+  </p>
+
+  <!-- Quick nav -->
+  <nav class="quick-nav">
+    <a href="#concept-a"><span class="letter">A</span> Jira-like Gadget Grid</a>
+    <a href="#concept-b"><span class="letter">B</span> Sprint Health Desk</a>
+    <a href="#concept-c"><span class="letter">C</span> Personal Home</a>
+    <a href="#concept-d"><span class="letter">D</span> Template Gallery</a>
+    <a href="#concept-e"><span class="letter">E</span> Mosaic KPI Wall</a>
+    <a href="#concept-f"><span class="letter">F</span> Sidebar + Preview</a>
+    <a href="#comparison">Compare</a>
+  </nav>
+
+  <div class="scope-legend">
+    <span class="k"><span class="dot sprint"></span>Sprint scope</span>
+    <span class="k"><span class="dot personal"></span>Personal scope</span>
+    <span class="k"><span class="dot project"></span>Project scope</span>
+    <span style="margin-left:auto;color:var(--faint)">Sample data: OPS project · Sprint 14 · Ana Solis (admin), Luis Mora, Diego Rivas</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT A — Jira-like Gadget Grid
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-a">
+    <div class="concept-head">
+      <span class="concept-letter">A</span>
+      <h2>Jira-like Gadget Grid + Add drawer</h2>
+      <span class="scope project">Project</span>
+      <span class="thesis">2-column gadget grid with a right-side Add-gadget drawer; iteration of today’s UI, zero model changes.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Today’s page is a bare <em>Name / Description / Create</em> form sitting above a flat table of dashboards. Even on the detail page, adding a gadget requires scrolling to a 6-field form with a JQL textbox. Direction A keeps the existing 4 gadget types (<code>jql_count</code>, <code>status_breakdown</code>, <code>recent_activity</code>, <code>sla_breached</code>) but surfaces them as a real gadget grid with an always-visible <em>+ Add gadget</em> drawer — a familiar Jira pattern.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        Not opinionated about scope — just a canvas. Fixed 2-column grid wastes space on wide screens vs E’s true mosaic. Drawer occupies ~280px right rail which may feel heavy for 1-gadget boards. Minimal invention: no new backend model, so cheap to ship — but also no new superpowers.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="state-strip">
+        <span class="pill active">Populated</span>
+        <span class="pill">Create / Empty</span>
+      </div>
+      <div class="mock-toolbar">
+        <strong style="font-size:12px">Ops overview</strong>
+        <span style="font-size:11px;color:var(--muted)">4 gadgets · Ana Solis · updated 2 min ago</span>
+        <div class="spacer"></div>
+        <div class="seg">
+          <button class="is-on">Edit layout</button>
+          <button>View</button>
+        </div>
+        <button class="btn">Clone</button>
+        <button class="btn">Share</button>
+      </div>
+
+      <div class="ga-shell">
+        <div class="ga-main">
+          <div class="ga-grid">
+            <!-- JQL count -->
+            <div class="gadget is-focus">
+              <div class="gadget-head">
+                <span class="ttl">Open bugs — Payments</span>
+                <span class="ty">· JQL count</span>
+                <span class="drag">⋮⋮</span>
+              </div>
+              <div class="gadget-body">
+                <div class="stat-num err">7<span class="delta">+2 this week</span></div>
+                <div class="stat-sub"><code>project = OPS AND type = bug AND status != done AND component = Payments</code></div>
+                <div style="margin-top:0.3rem"><a href="#">Open in Issues ↗</a></div>
+              </div>
+            </div>
+
+            <!-- Status breakdown -->
+            <div class="gadget">
+              <div class="gadget-head">
+                <span class="ttl">Status mix — OPS</span>
+                <span class="ty">· Status breakdown</span>
+                <span class="drag">⋮⋮</span>
+              </div>
+              <div class="gadget-body">
+                <div class="stat-sub" style="margin-bottom:0.35rem">6 issues · Sprint 14</div>
+                <div class="agg-row"><span class="lbl">To do</span><div class="agg-track"><div class="agg-fill todo" style="width:34%"></div></div><span class="n">2</span></div>
+                <div class="agg-row"><span class="lbl">In progress</span><div class="agg-track"><div class="agg-fill ip" style="width:17%"></div></div><span class="n">1</span></div>
+                <div class="agg-row"><span class="lbl">In review</span><div class="agg-track"><div class="agg-fill review" style="width:17%"></div></div><span class="n">1</span></div>
+                <div class="agg-row"><span class="lbl">Done</span><div class="agg-track"><div class="agg-fill done" style="width:34%"></div></div><span class="n">2</span></div>
+              </div>
+            </div>
+
+            <!-- Recent activity -->
+            <div class="gadget">
+              <div class="gadget-head">
+                <span class="ttl">Activity — OPS</span>
+                <span class="ty">· Recent activity</span>
+                <span class="drag">⋮⋮</span>
+              </div>
+              <div class="gadget-body">
+                <div class="act-list">
+                  <div class="act-item"><span class="k">OPS-3</span><span class="msg">Luis moved to In review</span><span class="when">14:22</span></div>
+                  <div class="act-item"><span class="k">OPS-4</span><span class="msg">Diego commented: reproduced on staging</span><span class="when">13:08</span></div>
+                  <div class="act-item"><span class="k">OPS-2</span><span class="msg">Ana set assignee → Luis</span><span class="when">11:40</span></div>
+                  <div class="act-item"><span class="k">OPS-6</span><span class="msg">Ana marked Done</span><span class="when">Oct 31</span></div>
+                  <div class="act-item"><span class="k">OPS-1</span><span class="msg">Ana linked to 1.0</span><span class="when">Oct 31</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLA breached -->
+            <div class="gadget">
+              <div class="gadget-head">
+                <span class="ttl">SLA breaches — Helpdesk</span>
+                <span class="ty">· SLA breached</span>
+                <span class="drag">⋮⋮</span>
+              </div>
+              <div class="gadget-body">
+                <div class="stat-num warn">3</div>
+                <div class="sla-list">
+                  <div class="sla-item"><span class="key">HD-14</span><span class="tag tag--bug">Breached</span><span>Register freezes on refund</span></div>
+                  <div class="sla-item"><span class="key">HD-21</span><span class="tag tag--bug">Breached</span><span>Duplicate charge Nov 1</span></div>
+                  <div class="sla-item"><span class="key">HD-18</span><span class="tag tag--review">At risk</span><span>POS display cuts off totals</span></div>
+                </div>
+                <div style="margin-top:0.3rem"><a href="#">Full SLA report ↗</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add gadget drawer -->
+        <aside class="ga-drawer">
+          <div class="ga-drawer-head">
+            <span class="ttl">+ Add gadget</span>
+            <span class="x">✕</span>
+          </div>
+          <div class="ga-drawer-list">
+            <h5>Counts</h5>
+            <div class="ga-pick is-sel">
+              <span class="nm">JQL count</span>
+              <span class="d">A single number from any JQL query. Great for KPIs.</span>
+            </div>
+            <h5>Breakdown</h5>
+            <div class="ga-pick">
+              <span class="nm">Status breakdown</span>
+              <span class="d">Horizontal bars by status for a project.</span>
+            </div>
+            <h5>Activity</h5>
+            <div class="ga-pick">
+              <span class="nm">Recent activity</span>
+              <span class="d">Last N events in a project feed.</span>
+            </div>
+            <h5>Service</h5>
+            <div class="ga-pick">
+              <span class="nm">SLA breached</span>
+              <span class="d">Helpdesk tickets past SLA.</span>
+            </div>
+          </div>
+          <div class="ga-drawer-foot">
+            <button class="btn">Cancel</button>
+            <button class="btn btn--primary" style="margin-left:auto">Add JQL count →</button>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Second state: empty / fresh dashboard -->
+      <div style="margin-top:1rem" class="state-strip">
+        <span class="pill">Populated</span>
+        <span class="pill active">Empty state</span>
+      </div>
+      <div class="d-empty">
+        <div class="ico">▦</div>
+        <h4>No gadgets yet</h4>
+        <p>Pick a gadget from the right drawer. You can rearrange them later.</p>
+        <div class="ctas">
+          <button class="btn btn--primary">+ JQL count</button>
+          <button class="btn">+ Status breakdown</button>
+          <button class="btn">+ Recent activity</button>
+          <button class="btn">+ SLA breached</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT B — Sprint Health Desk
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-b">
+    <div class="concept-head">
+      <span class="concept-letter">B</span>
+      <h2>Sprint Health Desk</h2>
+      <span class="scope sprint">Sprint</span>
+      <span class="thesis">Opinionated dashboard pinned to the active sprint: burndown, commitment, blockers, remaining points — one answer to “how is Sprint 14 doing?”.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Current <code>/dashboards</code> gives you four generic gadgets — none of which answer the question every scrum team asks on standup: <em>is this sprint on track?</em> You’d have to hand-craft a JQL count for commitment, a status breakdown for progress, and still miss blockers. Direction B is a scope-locked dashboard template: pick a sprint, get burndown + commitment delta + blockers + capacity in one scroll.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        Needs a new gadget type (<code>burndown</code>) and the model must track sprint start/end + daily remaining points (we only have sprint state today). Useless outside sprint cadence — Kanban teams get nothing from this. Doesn’t replace A: this is a <em>flavor</em> you pick from D’s template gallery, not the universal canvas.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="state-strip">
+        <span class="pill active">Populated</span>
+        <span class="pill">Mid-sprint snapshot</span>
+      </div>
+      <div class="mock-toolbar">
+        <strong style="font-size:12px">OPS · Sprint 14 · Health</strong>
+        <span style="font-size:11px;color:var(--muted)">Day 4 of 10 · Nov 1</span>
+        <div class="spacer"></div>
+        <div class="seg">
+          <button class="is-on">Sprint 14 (active)</button>
+          <button>Sprint 15 (planned)</button>
+          <button>Sprint 13 (closed)</button>
+        </div>
+        <button class="btn">Pin to home</button>
+      </div>
+
+      <div class="sh-shell">
+        <div class="sh-head">
+          <span class="vname">Sprint 14</span>
+          <span class="goal">“Stop duplicate charges and ship the retry path.”</span>
+          <span class="cd hot" style="margin-left:auto">6 days left</span>
+          <span class="cd">Ends Nov 7</span>
+        </div>
+
+        <div class="sh-kpi">
+          <div>
+            <div class="lbl">Commitment</div>
+            <div class="v">18 <span style="font-size:11px;color:var(--muted);font-weight:500">pts</span></div>
+            <div class="sub">4 stories · 1 bug · 1 task</div>
+          </div>
+          <div>
+            <div class="lbl">Completed</div>
+            <div class="v ok">5 <span style="font-size:11px;color:var(--muted);font-weight:500">pts</span></div>
+            <div class="sub">28% done · 2 issues</div>
+          </div>
+          <div>
+            <div class="lbl">Remaining</div>
+            <div class="v warn">13</div>
+            <div class="sub">target 11 by day 4</div>
+          </div>
+          <div>
+            <div class="lbl">Scope added</div>
+            <div class="v warn">+2</div>
+            <div class="sub">OPS-5 added Oct 30</div>
+          </div>
+          <div>
+            <div class="lbl">Blockers</div>
+            <div class="v err">1</div>
+            <div class="sub">OPS-4 (highest)</div>
+          </div>
+        </div>
+
+        <div class="sh-body">
+          <div class="sh-left">
+            <h3>Burndown — remaining points by day</h3>
+            <div class="bd-chart">
+              <div class="bd-axis-y">
+                <span>20</span><span>15</span><span>10</span><span>5</span><span>0</span>
+              </div>
+              <svg viewBox="0 0 420 150" preserveAspectRatio="none">
+                <!-- Ideal line: start 18 pts (y=15) → 0 (y=150) over day 0..day 10 -->
+                <line x1="0" y1="15" x2="420" y2="150" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 4"/>
+                <!-- Actual burndown. y = (20 - pts) * 7.5
+                     Day 0 (Mon 10/27) : 16 pts (y=30)
+                     Day 1 (Tue 28)    : 16 pts (y=30)
+                     Day 2 (Wed 29)    : 15 pts (y=37)
+                     Scope bump Oct 30 (day 3) : 15 → 17 (y=22)
+                     Day 3 (Thu 30)    : 17 pts (y=22)
+                     Day 4 (Fri 31)    : 15 pts (y=37)
+                     Today Sat 11/1    : 13 pts (y=52) -->
+                <polyline fill="none" stroke="#2563eb" stroke-width="2"
+                  points="0,30 60,30 120,37 180,22 240,37 300,52"/>
+                <!-- Today marker vertical line at day 5 (x=300 of 420) -->
+                <line x1="300" y1="0" x2="300" y2="150" stroke="#dc2626" stroke-width="1" stroke-dasharray="2 2"/>
+                <circle cx="300" cy="52" r="4" fill="#2563eb"/>
+                <text x="200" y="68" font-size="10" fill="#dc2626" font-family="JetBrains Mono">today · 13 pts</text>
+                <!-- Scope bump marker on day 3 -->
+                <line x1="180" y1="37" x2="180" y2="22" stroke="#d97706" stroke-width="2"/>
+                <text x="186" y="18" font-size="9" fill="#d97706" font-family="JetBrains Mono">+2 scope</text>
+              </svg>
+            </div>
+            <div class="bd-axis-x">
+              <span>Mon 10/27</span><span>Tue 28</span><span>Wed 29</span><span>Thu 30</span><span>Fri 31</span><span>Sat 11/1</span><span>Fri 11/7</span>
+            </div>
+            <div class="bd-leg">
+              <span><span class="sw ideal"></span>Ideal</span>
+              <span><span class="sw real"></span>Actual</span>
+              <span><span class="sw scope"></span>Scope change</span>
+              <span style="margin-left:auto;color:var(--today)"><strong>■</strong> Today</span>
+            </div>
+
+            <div class="sh-commit">
+              <div class="box">
+                <div class="lbl">Points committed vs delivered</div>
+                <div><span class="big">5 / 18</span> <span class="delta">· 28%</span></div>
+                <div class="track"><div class="fill" style="width:28%"></div></div>
+              </div>
+              <div class="box">
+                <div class="lbl">Issues done vs total</div>
+                <div><span class="big">2 / 6</span> <span class="delta">· 33%</span></div>
+                <div class="track"><div class="fill" style="width:33%"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sh-right">
+            <h3>Blockers &amp; at-risk</h3>
+            <div class="blk-list">
+              <div class="blk">
+                <span class="key">OPS-4</span>
+                <span class="sum">Duplicate charge on timeout — <span class="tag tag--high">highest</span></span>
+                <span class="meta">Diego · 2d idle</span>
+              </div>
+              <div class="blk warn">
+                <span class="key">OPS-2</span>
+                <span class="sum">Retry a failed capture — waiting on gateway sandbox</span>
+                <span class="meta">Luis · 1d idle</span>
+              </div>
+              <div class="blk warn">
+                <span class="key">OPS-5</span>
+                <span class="sum">Refund confirmation email — unassigned</span>
+                <span class="meta">— · added Oct 30</span>
+              </div>
+            </div>
+
+            <h3 style="margin-top:0.75rem">By assignee</h3>
+            <div class="act-list" style="font-size:11px">
+              <div class="act-item" style="grid-template-columns: 90px 1fr 44px">
+                <span>Ana Solis</span><span>OPS-3, OPS-6 (both done)</span><span class="when" style="color:var(--ok)">2 / 2</span>
+              </div>
+              <div class="act-item" style="grid-template-columns: 90px 1fr 44px">
+                <span>Luis Mora</span><span>OPS-2 (ip)</span><span class="when">0 / 1</span>
+              </div>
+              <div class="act-item" style="grid-template-columns: 90px 1fr 44px">
+                <span>Diego Rivas</span><span>OPS-4 (blocked)</span><span class="when" style="color:var(--error)">0 / 1</span>
+              </div>
+              <div class="act-item" style="grid-template-columns: 90px 1fr 44px">
+                <span>Unassigned</span><span>OPS-5</span><span class="when" style="color:var(--warn)">0 / 1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT C — Personal Home
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-c">
+    <div class="concept-head">
+      <span class="concept-letter">C</span>
+      <h2>Personal Home</h2>
+      <span class="scope personal">Personal</span>
+      <span class="thesis">“Ana’s day” — my open work, due soon, mentions, focus block, streak. The first thing you see after login, not a tool.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Today, dashboards are objects you build. There is no first-person “where should I pick up?” surface — users land on <code>/</code> or <code>/issues</code> and scroll. Direction C treats the personal dashboard as the default landing page: a single <em>Focus block</em> CTA (your most-stale ip issue), lists of your open work &amp; due soon, your mentions, and a tiny streak heatmap. Zero config — it just renders.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        A dashboard that cannot be customised feels less like a dashboard and more like a landing page — that may be the point, but it conflicts with “gadgets”. Requires a notion of <em>mentions</em> (not fully modelled today) and a focus-block affordance (new UX). Doesn’t help managers who need team-level visibility.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="state-strip">
+        <span class="pill active">Populated — Ana Solis logged in</span>
+        <span class="pill">Sun Nov 1 · 10:20</span>
+      </div>
+      <div class="ph-shell">
+        <!-- MAIN -->
+        <div class="ph-main">
+          <div class="ph-greet">
+            <span class="av">A</span>
+            <div>
+              <h2>Good evening, Ana</h2>
+              <div class="sub">5 open · 2 due this week · 1 mention · 1 blocker on your plate</div>
+            </div>
+            <div class="right">
+              Sprint 14 — day 4<br>
+              <strong>13 pts</strong> remaining
+            </div>
+          </div>
+
+          <div class="ph-focus">
+            <div>
+              <div class="lbl">Focus block · suggested</div>
+              <div class="focus-ttl"><span class="key">OPS-3</span> &nbsp; Store the idempotency key</div>
+              <div class="focus-sub">In review · 3 pts · idle 1d · the only thing blocking OPS-2 from merging</div>
+            </div>
+            <button class="btn">Start 45-min focus →</button>
+          </div>
+
+          <div class="ph-panel">
+            <div class="ph-panel-head">
+              <span>My open work</span>
+              <span class="n">5 items · 3 projects</span>
+            </div>
+            <div class="ph-panel-body ph-work">
+              <div class="ph-work-row">
+                <span class="key">OPS-3</span>
+                <span class="tag tag--review">Review</span>
+                <span class="sum">Store the idempotency key</span>
+                <span class="due hot">1d idle</span>
+                <span class="pts">3 pts</span>
+              </div>
+              <div class="ph-work-row is-due">
+                <span class="key">OPS-1</span>
+                <span class="tag tag--ip">In progress</span>
+                <span class="sum">Checkout reliability (epic) — needs scope lock before 1.0</span>
+                <span class="due hot">due today</span>
+                <span class="pts">—</span>
+              </div>
+              <div class="ph-work-row">
+                <span class="key">OPS-6</span>
+                <span class="tag tag--done">Done</span>
+                <span class="sum">Close the register</span>
+                <span class="due">Oct 31</span>
+                <span class="pts">2 pts</span>
+              </div>
+              <div class="ph-work-row">
+                <span class="key">CAT-7</span>
+                <span class="tag tag--ip">In progress</span>
+                <span class="sum">Catalog launch (reviewer)</span>
+                <span class="due">Nov 7</span>
+                <span class="pts">—</span>
+              </div>
+              <div class="ph-work-row">
+                <span class="key">HD-12</span>
+                <span class="tag tag--todo">To do</span>
+                <span class="sum">Reply: how do I close the drawer manually?</span>
+                <span class="due">SLA 4h</span>
+                <span class="pts">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ph-panel">
+            <div class="ph-panel-head">
+              <span>Due soon · next 7 days</span>
+              <span class="n">2 items</span>
+            </div>
+            <div class="ph-panel-body ph-work">
+              <div class="ph-work-row is-due">
+                <span class="key">OPS-1</span>
+                <span class="tag tag--epic">Epic</span>
+                <span class="sum">1.0 ship-ready scope lock</span>
+                <span class="due hot">today</span>
+                <span class="pts">—</span>
+              </div>
+              <div class="ph-work-row">
+                <span class="key">OPS-S14</span>
+                <span class="tag tag--muted">Sprint</span>
+                <span class="sum">Sprint 14 close + retro</span>
+                <span class="due">Fri Nov 7</span>
+                <span class="pts">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIDE -->
+        <div class="ph-side">
+          <div class="ph-panel">
+            <div class="ph-panel-head">
+              <span>@Mentions</span>
+              <span class="n">1 unread</span>
+            </div>
+            <div class="ph-panel-body">
+              <div class="mention">
+                <span class="av">D</span>
+                <div class="body">
+                  <div><span class="who">Diego</span> <span class="where">on <span class="key">OPS-4</span></span></div>
+                  <div class="snip">“@Ana reproduced on staging gateway with 30s delay — second POST creates a new charge.”</div>
+                </div>
+                <span class="when">13:08</span>
+              </div>
+              <div class="mention">
+                <span class="av" style="background:var(--muted)">L</span>
+                <div class="body">
+                  <div><span class="who">Luis</span> <span class="where">on <span class="key">OPS-2</span></span></div>
+                  <div class="snip">“@Ana retry only when gateway returns timeout — never on decline, right?”</div>
+                </div>
+                <span class="when">11:40</span>
+              </div>
+              <div class="mention">
+                <span class="av" style="background:var(--muted)">D</span>
+                <div class="body">
+                  <div><span class="who">Diego</span> <span class="where">in <span class="key">ENG · how-we-ship</span></span></div>
+                  <div class="snip">“@Ana added you as reviewer on the retry runbook.”</div>
+                </div>
+                <span class="when">Fri</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ph-panel">
+            <div class="ph-panel-head">
+              <span>Today</span>
+              <span class="n">Sun Nov 1</span>
+            </div>
+            <div class="ph-panel-body ph-tl">
+              <div class="ph-tl-slot"><span class="t">10:00</span><span class="ev"><span class="dot focus"></span>Focus · OPS-3 (45 min)</span></div>
+              <div class="ph-tl-slot is-now"><span class="t">now</span><span class="ev"><span class="dot"></span>Reviewing dashboard concepts</span></div>
+              <div class="ph-tl-slot"><span class="t">13:00</span><span class="ev"><span class="dot mtg"></span>1:1 with Luis (30 min)</span></div>
+              <div class="ph-tl-slot"><span class="t">15:00</span><span class="ev"><span class="dot mtg"></span>1.0 ship review</span></div>
+              <div class="ph-tl-slot"><span class="t">17:00</span><span class="ev"><span class="dot focus"></span>Focus · OPS-1 scope lock</span></div>
+            </div>
+          </div>
+
+          <div class="ph-panel">
+            <div class="ph-panel-head">
+              <span>Streak · last 14 days</span>
+              <span class="n">8 / 14 active</span>
+            </div>
+            <div class="ph-panel-body">
+              <div class="ph-streak">
+                <span class="box"></span><span class="box l1"></span><span class="box l2"></span>
+                <span class="box l1"></span><span class="box"></span><span class="box"></span>
+                <span class="box l3"></span><span class="box l2"></span><span class="box l1"></span>
+                <span class="box l3"></span><span class="box l2"></span><span class="box l3"></span>
+                <span class="box l1"></span><span class="box l2 today"></span>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:0.3rem">
+                3 commits · 2 reviews · 1 ticket closed today
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT D — Template Gallery Create flow
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-d">
+    <div class="concept-head">
+      <span class="concept-letter">D</span>
+      <h2>Template Gallery · Create flow</h2>
+      <span class="scope sprint">Sprint</span>
+      <span class="scope personal">Personal</span>
+      <span class="scope project">Project</span>
+      <span class="thesis">Replace the one-line New dashboard form with a 2-step template gallery: pick Sprint / Personal / Project / Blank, then name + scope.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Today, <em>Create</em> is a <code>name + description</code> form that produces an empty board — every single user has to re-invent the same four gadgets. Direction D nests a template picker in the create flow: four pre-wired templates (Sprint Health, Personal Home, Project Overview, Blank) that pre-populate the right gadgets scoped correctly. First-time users land on populated boards; power users still get <em>Blank</em>.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        Requires a template model (gadget set + scope + default filters bound to a template key). The 3-card gallery takes vertical space — the current one-line form is unbeatable for terseness. Templates can rot: a “Sprint Health” that stays stale forever is worse than no template.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="state-strip">
+        <span class="pill active">Create flow — step 1 picker</span>
+        <span class="pill">Step 2 name &amp; scope</span>
+        <span class="pill">Index page empty state</span>
+      </div>
+
+      <!-- Step 1: picker -->
+      <div class="tg-shell">
+        <div class="tg-steps">
+          <span class="tg-step is-on">1. Pick a template</span>
+          <span class="tg-step">2. Name &amp; scope</span>
+          <span class="tg-step">3. Done</span>
+        </div>
+        <div class="tg-title">New dashboard</div>
+        <div class="tg-sub">Start from a template or build from scratch. You can edit everything after.</div>
+
+        <div class="tg-grid">
+          <!-- Sprint template (selected) -->
+          <div class="tg-card is-sel">
+            <div class="thumb">
+              <span class="scope sprint" style="position:absolute;top:6px;left:6px;padding:1px 4px;font-size:8px">Sprint</span>
+              <!-- mini preview -->
+              <div class="mini" style="top:30px;left:6px;width:60%">Burndown</div>
+              <!-- fake burndown line -->
+              <svg viewBox="0 0 200 50" style="position:absolute;top:48px;left:6px;width:60%;height:30px" preserveAspectRatio="none">
+                <polyline fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2 2" points="0,5 200,45"/>
+                <polyline fill="none" stroke="#2563eb" stroke-width="2" points="0,10 50,15 100,25 150,30 200,38"/>
+              </svg>
+              <span class="big-n" style="top:30px;right:8px">13<span style="font-size:9px;color:var(--muted);display:block;text-align:right">pts left</span></span>
+              <div class="mini" style="bottom:6px;left:6px">Blockers · 1</div>
+              <div class="mini" style="bottom:6px;left:70px">By assignee</div>
+            </div>
+            <div class="body">
+              <span class="scope sprint">Sprint</span>
+              <h4>Sprint Health</h4>
+              <div class="d">Burndown, commitment vs delivered, blockers, assignee rollup — pinned to one sprint.</div>
+              <div class="inc"><strong>Includes:</strong> burndown · scope delta · 1 blocker list · 1 assignee rollup</div>
+            </div>
+          </div>
+
+          <!-- Personal template -->
+          <div class="tg-card">
+            <div class="thumb">
+              <span class="scope personal" style="position:absolute;top:6px;left:6px;padding:1px 4px;font-size:8px">Personal</span>
+              <div class="mini" style="top:30px;left:6px">My open · 5</div>
+              <div class="mini" style="top:52px;left:6px">Due soon · 2</div>
+              <div class="mini" style="top:74px;left:6px">Mentions · 1</div>
+              <span class="big-n" style="top:34px;right:10px;font-size:22px">5</span>
+              <div class="mini" style="bottom:6px;left:6px;right:6px">Today · 10:00 · focus OPS-3</div>
+            </div>
+            <div class="body">
+              <span class="scope personal">Personal</span>
+              <h4>Personal Home</h4>
+              <div class="d">Your open work, due soon, mentions, and a focus-block CTA — bound to you, not a project.</div>
+              <div class="inc"><strong>Includes:</strong> my work · due 7d · mentions · focus block · streak</div>
+            </div>
+          </div>
+
+          <!-- Project template -->
+          <div class="tg-card">
+            <div class="thumb">
+              <span class="scope project" style="position:absolute;top:6px;left:6px;padding:1px 4px;font-size:8px">Project</span>
+              <div class="mini" style="top:30px;left:6px">Status mix</div>
+              <!-- fake bars -->
+              <div class="bar" style="top:46px;left:6px;width:30%;background:#94a3b8"></div>
+              <div class="bar" style="top:52px;left:6px;width:20%;background:#2563eb"></div>
+              <div class="bar" style="top:58px;left:6px;width:20%;background:#d97706"></div>
+              <div class="bar" style="top:64px;left:6px;width:35%;background:#059669"></div>
+              <span class="big-n" style="top:30px;right:10px">6<span style="font-size:9px;color:var(--muted);display:block;text-align:right">open</span></span>
+              <div class="mini" style="bottom:6px;left:6px">Activity · 5 events</div>
+              <div class="mini" style="bottom:6px;left:92px">SLA · 3 breached</div>
+            </div>
+            <div class="body">
+              <span class="scope project">Project</span>
+              <h4>Project Overview</h4>
+              <div class="d">Status mix, open bugs, SLA breaches, recent activity — pre-scoped to one project.</div>
+              <div class="inc"><strong>Includes:</strong> status breakdown · open bugs JQL · activity · SLA</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary row: blank + from existing -->
+        <div class="tg-grid" style="margin-top:0.5rem;grid-template-columns: 1fr 1fr">
+          <div class="tg-card">
+            <div class="thumb" style="display:flex;align-items:center;justify-content:center">
+              <span style="color:var(--faint);font-size:36px;font-weight:300">+</span>
+            </div>
+            <div class="body">
+              <span class="scope blank">Blank</span>
+              <h4>Start blank</h4>
+              <div class="d">An empty canvas. You pick every gadget. The current behaviour.</div>
+            </div>
+          </div>
+          <div class="tg-card">
+            <div class="thumb" style="padding:0.8rem;color:var(--muted);font-size:10px">
+              <div style="margin-bottom:0.3rem"><strong style="color:var(--text)">Ops overview</strong> · 4 gadgets · Ana</div>
+              <div style="margin-bottom:0.3rem">Sprint 14 health · 5 gadgets · Ana</div>
+              <div style="margin-bottom:0.3rem">Diego's helpdesk · 3 gadgets · Diego</div>
+            </div>
+            <div class="body">
+              <span class="scope blank">Clone</span>
+              <h4>Clone an existing dashboard</h4>
+              <div class="d">Fork someone else’s board — keeps the gadgets, drops the owner.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 inline: name & scope -->
+        <form class="tg-form" style="margin-top:1rem">
+          <label>
+            <span>Name</span>
+            <input value="Sprint 14 · OPS Health">
+          </label>
+          <label>
+            <span>Scope — Sprint</span>
+            <select>
+              <option>Sprint 14 (active) — OPS</option>
+              <option>Sprint 15 (planned) — OPS</option>
+              <option>Sprint 8 (active) — CAT</option>
+            </select>
+          </label>
+          <button>Create →</button>
+        </form>
+      </div>
+
+      <!-- Index page empty state -->
+      <div style="margin-top:1rem" class="state-strip">
+        <span class="pill">Create flow</span>
+        <span class="pill active">Dashboards index · empty state</span>
+      </div>
+      <div style="padding:1rem;background:var(--surface);border:1px solid var(--border)">
+        <div style="display:flex;align-items:baseline;margin-bottom:0.5rem">
+          <strong style="font-size:14px">Dashboards</strong>
+          <span style="font-size:11px;color:var(--muted);margin-left:0.5rem">You don’t own any yet — pick a template to start.</span>
+        </div>
+        <div class="tg-grid">
+          <div class="tg-card">
+            <div class="thumb" style="padding:0.5rem;color:var(--muted);font-size:10px">
+              <div style="font-weight:600;color:var(--text)">Burndown</div>
+              <svg viewBox="0 0 200 50" style="width:100%;height:50px" preserveAspectRatio="none">
+                <polyline fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2 2" points="0,5 200,45"/>
+                <polyline fill="none" stroke="#2563eb" stroke-width="2" points="0,10 100,25 200,40"/>
+              </svg>
+            </div>
+            <div class="body">
+              <span class="scope sprint">Sprint</span>
+              <h4>Sprint Health →</h4>
+            </div>
+          </div>
+          <div class="tg-card">
+            <div class="thumb" style="padding:0.5rem;color:var(--muted);font-size:10px;display:flex;flex-direction:column;gap:0.2rem">
+              <div><strong style="color:var(--text)">My open · 5</strong></div>
+              <div>Due soon · 2</div>
+              <div>Mentions · 1</div>
+            </div>
+            <div class="body">
+              <span class="scope personal">Personal</span>
+              <h4>Personal Home →</h4>
+            </div>
+          </div>
+          <div class="tg-card">
+            <div class="thumb" style="padding:0.5rem;color:var(--muted);font-size:10px">
+              <div style="font-weight:600;color:var(--text)">Status mix · 6</div>
+              <div style="height:4px;background:#94a3b8;width:50%;margin-top:4px"></div>
+              <div style="height:4px;background:#2563eb;width:20%;margin-top:2px"></div>
+              <div style="height:4px;background:#d97706;width:15%;margin-top:2px"></div>
+              <div style="height:4px;background:#059669;width:35%;margin-top:2px"></div>
+            </div>
+            <div class="body">
+              <span class="scope project">Project</span>
+              <h4>Project Overview →</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT E — Mosaic KPI Wall
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-e">
+    <div class="concept-head">
+      <span class="concept-letter">E</span>
+      <h2>Mosaic KPI Wall · drag-resize</h2>
+      <span class="scope project">Project</span>
+      <span class="thesis">Freeform 12-column mosaic — big-number KPIs, sparklines, mini bars. Drag corners to resize. Executive wall vibe.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        A’s 2-column grid is forgiving but boring — every gadget has the same visual weight. For stakeholder-facing dashboards (ship review, exec read-out), one gadget — like “days to 1.0” — should scream and the rest should whisper. Direction E is a 12-col row-based mosaic with explicit size handles, big-number tiles with sparklines, and a visible edit mode so resizing is discoverable without hover tooltips.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        A true drag-resize layout needs grid-position persistence (x, y, w, h per gadget) that today’s <code>position</code> int doesn’t support — the migration is the real cost. Mosaics look great in screenshots and get messy fast — expect regret from first-time editors. Sparklines need historical data most gadgets don’t store yet.
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="state-strip">
+        <span class="pill active">Edit mode · Ana resizing</span>
+        <span class="pill">View mode (handles hidden)</span>
+      </div>
+
+      <div class="mw-shell">
+        <div class="mw-mode">
+          <span class="pulse"></span>
+          <strong style="font-size:11px">Edit mode</strong>
+          <span style="color:var(--muted)">— drag tiles by their header, resize from bottom-right corner. Grid snaps to 12 cols.</span>
+          <div class="spacer"></div>
+          <button class="btn">Discard</button>
+          <button class="btn primary">Save layout</button>
+        </div>
+
+        <div class="mw-grid">
+          <!-- Big hero: days to ship -->
+          <div class="mw-tile is-edit sp-4 sr-2">
+            <div class="lbl">Days to 1.0</div>
+            <div class="big err">0</div>
+            <div class="sm">target Sun Nov 1 · <span style="color:var(--error)">ships today</span></div>
+            <div class="mw-bars">
+              <div class="bar lo" style="height:40%"></div>
+              <div class="bar lo" style="height:60%"></div>
+              <div class="bar lo" style="height:70%"></div>
+              <div class="bar lo" style="height:50%"></div>
+              <div class="bar" style="height:30%"></div>
+              <div class="bar" style="height:20%"></div>
+              <div class="bar" style="height:10%"></div>
+              <div class="bar" style="height:5%"></div>
+            </div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- Open bugs -->
+          <div class="mw-tile is-edit sp-3">
+            <div class="lbl">Open bugs · OPS</div>
+            <div class="big warn">7</div>
+            <div class="delta dn">+2 wk / +0 today</div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- Pts remaining -->
+          <div class="mw-tile is-edit sp-3">
+            <div class="lbl">Sprint 14 · pts left</div>
+            <div class="big">13</div>
+            <div class="sm">of 18 committed</div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- SLA breaches -->
+          <div class="mw-tile is-edit sp-2">
+            <div class="lbl">SLA breach</div>
+            <div class="big err">3</div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- Status row (continuing in rows 2-3) -->
+          <div class="mw-tile is-edit sp-8 sr-2">
+            <div class="lbl">Issue status · OPS (last 30d, weekly)</div>
+            <svg viewBox="0 0 400 100" style="width:100%;height:120px;margin-top:0.3rem" preserveAspectRatio="none">
+              <!-- stacked area approximation -->
+              <polygon fill="#059669" fill-opacity="0.9" points="0,70 100,60 200,55 300,45 400,30 400,100 0,100"/>
+              <polygon fill="#2563eb" fill-opacity="0.8" points="0,55 100,45 200,42 300,35 400,22 400,30 300,45 200,55 100,60 0,70"/>
+              <polygon fill="#d97706" fill-opacity="0.8" points="0,40 100,32 200,28 300,22 400,15 400,22 300,35 200,42 100,45 0,55"/>
+              <polygon fill="#94a3b8" fill-opacity="0.6" points="0,20 100,18 200,14 300,10 400,8 400,15 300,22 200,28 100,32 0,40"/>
+            </svg>
+            <div style="font-size:9px;color:var(--muted);display:flex;gap:0.6rem;margin-top:0.2rem">
+              <span><span style="display:inline-block;width:8px;height:8px;background:var(--ok)"></span> Done</span>
+              <span><span style="display:inline-block;width:8px;height:8px;background:var(--accent)"></span> IP</span>
+              <span><span style="display:inline-block;width:8px;height:8px;background:var(--warn)"></span> Review</span>
+              <span><span style="display:inline-block;width:8px;height:8px;background:var(--faint)"></span> To do</span>
+            </div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- Blocker spotlight -->
+          <div class="mw-tile is-edit sp-4">
+            <div class="lbl">Top blocker</div>
+            <div style="font-size:13px;font-weight:600;margin-top:0.1rem">
+              <span class="key">OPS-4</span> Duplicate charge on timeout
+            </div>
+            <div class="sm">Diego · idle 2d · <span class="tag tag--high">highest</span></div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- Capacity -->
+          <div class="mw-tile is-edit sp-4 sr-2">
+            <div class="lbl">Capacity · Sprint 14</div>
+            <div class="agg-row" style="margin-top:0.3rem"><span class="lbl">Ana</span><div class="agg-track"><div class="agg-fill done" style="width:100%"></div></div><span class="n">5</span></div>
+            <div class="agg-row"><span class="lbl">Luis</span><div class="agg-track"><div class="agg-fill ip" style="width:40%"></div></div><span class="n">5</span></div>
+            <div class="agg-row"><span class="lbl">Diego</span><div class="agg-track"><div class="agg-fill review" style="width:0%"></div></div><span class="n">5</span></div>
+            <div class="agg-row"><span class="lbl">Unass.</span><div class="agg-track"><div class="agg-fill todo" style="width:0%"></div></div><span class="n">3</span></div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- Activity feed -->
+          <div class="mw-tile is-edit sp-6 sr-2">
+            <div class="lbl">Live activity · OPS</div>
+            <div class="act-list" style="margin-top:0.3rem">
+              <div class="act-item"><span class="k">OPS-3</span><span class="msg">Luis → In review</span><span class="when">14:22</span></div>
+              <div class="act-item"><span class="k">OPS-4</span><span class="msg">Diego commented · reproduced staging</span><span class="when">13:08</span></div>
+              <div class="act-item"><span class="k">OPS-2</span><span class="msg">Ana set assignee → Luis</span><span class="when">11:40</span></div>
+              <div class="act-item"><span class="k">OPS-6</span><span class="msg">Ana marked Done</span><span class="when">Oct 31</span></div>
+              <div class="act-item"><span class="k">OPS-1</span><span class="msg">Ana linked 1.0 version</span><span class="when">Oct 31</span></div>
+              <div class="act-item"><span class="k">OPS-5</span><span class="msg">Ana added to Sprint 14</span><span class="when">Oct 30</span></div>
+            </div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- Deploy freq -->
+          <div class="mw-tile is-edit sp-3">
+            <div class="lbl">Deploy freq · wk</div>
+            <div class="big">2.3</div>
+            <div class="delta up">+0.4 vs last 4w</div>
+            <div class="mw-bars">
+              <div class="bar" style="height:30%"></div>
+              <div class="bar" style="height:50%"></div>
+              <div class="bar" style="height:60%"></div>
+              <div class="bar" style="height:40%"></div>
+              <div class="bar" style="height:70%"></div>
+              <div class="bar" style="height:80%"></div>
+              <div class="bar" style="height:65%"></div>
+              <div class="bar" style="height:90%"></div>
+            </div>
+            <span class="handle-br"></span>
+          </div>
+
+          <!-- Lead time -->
+          <div class="mw-tile is-edit sp-3">
+            <div class="lbl">Lead-time median</div>
+            <div class="big ok">14d</div>
+            <div class="delta up">−3d vs last 4w</div>
+            <span class="handle-br"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       CONCEPT F — Sidebar switcher + live preview
+       ═══════════════════════════════════════════ -->
+  <section class="concept" id="concept-f">
+    <div class="concept-head">
+      <span class="concept-letter">F</span>
+      <h2>Sidebar switcher + live preview</h2>
+      <span class="scope personal">Personal</span>
+      <span class="scope project">Project</span>
+      <span class="thesis">Linear/Notion-style left sidebar of all dashboards with pinned/shared sections — right pane renders the selected board live. No index page.</span>
+    </div>
+    <div class="concept-meta">
+      <div>
+        <strong>Problem it solves</strong>
+        Today, <code>/dashboards</code> is a <em>list</em> and <code>/dashboards/[id]</code> is a <em>detail</em> page — switching costs a round-trip and loses context. For users with 3+ boards (release manager, team lead), that friction is real. Direction F folds both into one surface: left rail enumerates all accessible boards (grouped by Pinned → Mine → Shared), right pane renders instantly. Mirrors Linear’s views and Notion’s sidebar — patterns our audience already knows.
+      </div>
+      <div>
+        <strong>Tradeoffs</strong>
+        Breaks URL semantics mildly — <code>/dashboards</code> no longer has a “no selection” state. Needs a <em>pinned</em> boolean on dashboards (small schema change) and a <em>shared with</em> relation if we want the Shared section honest. 240px rail eats horizontal real-estate for small screens; collapses to a top drawer below ~900px. Index-free design: new users see an empty right pane the first time, which is a UX risk — needs a strong empty state (shown).
+      </div>
+    </div>
+    <div class="concept-mock">
+      <div class="state-strip">
+        <span class="pill active">Populated · Ops overview selected</span>
+        <span class="pill">Empty state (first-time user)</span>
+      </div>
+
+      <div class="sb-shell">
+        <!-- Rail -->
+        <aside class="sb-rail">
+          <div class="sb-search">
+            <input placeholder="Find dashboard…">
+            <button class="btn">+</button>
+          </div>
+
+          <div class="sb-sec">
+            <h4>Pinned</h4>
+            <div class="sb-item is-sel">
+              <span class="ico project">P</span>
+              <span class="nm">Ops overview</span>
+              <span class="star">★</span>
+            </div>
+            <div class="sb-item">
+              <span class="ico sprint">S</span>
+              <span class="nm">Sprint 14 Health</span>
+              <span class="n">live</span>
+            </div>
+          </div>
+
+          <div class="sb-sec">
+            <h4>Mine · 3</h4>
+            <div class="sb-item">
+              <span class="ico personal">M</span>
+              <span class="nm">My day · Ana</span>
+            </div>
+            <div class="sb-item">
+              <span class="ico project">P</span>
+              <span class="nm">1.0 ship readiness</span>
+              <span class="n">4g</span>
+            </div>
+            <div class="sb-item">
+              <span class="ico project">P</span>
+              <span class="nm">Catalog weekly</span>
+              <span class="n">3g</span>
+            </div>
+          </div>
+
+          <div class="sb-sec">
+            <h4>Shared with me · 2</h4>
+            <div class="sb-item">
+              <span class="ico shared">H</span>
+              <span class="nm">Diego · Helpdesk SLA</span>
+            </div>
+            <div class="sb-item">
+              <span class="ico shared">E</span>
+              <span class="nm">ENG · lead-time board</span>
+            </div>
+          </div>
+
+          <div class="sb-sec">
+            <h4>Recently viewed</h4>
+            <div class="sb-item">
+              <span class="ico sprint">S</span>
+              <span class="nm">Sprint 13 retro</span>
+            </div>
+          </div>
+
+          <div class="sb-new">+ New dashboard</div>
+        </aside>
+
+        <!-- Preview pane -->
+        <div class="sb-preview">
+          <div class="sb-preview-head">
+            <span class="ico project" style="width:18px;height:18px;background:var(--warn);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">P</span>
+            <span class="ttl">Ops overview</span>
+            <span class="meta">Ana · 4 gadgets · updated 2 min ago · 2 viewers now</span>
+            <div class="act">
+              <button class="btn pin">★ Pinned</button>
+              <button class="btn">Share</button>
+              <button class="btn">Edit</button>
+            </div>
+          </div>
+
+          <div class="sb-preview-grid">
+            <div class="gadget sp-full">
+              <div class="gadget-head">
+                <span class="ttl">Open bugs — Payments</span>
+                <span class="ty">· JQL count</span>
+              </div>
+              <div class="gadget-body" style="display:flex;gap:1rem;align-items:center">
+                <div class="stat-num err" style="margin-bottom:0">7<span class="delta">+2 this week</span></div>
+                <div class="stat-sub" style="flex:1"><code>project = OPS AND type = bug AND status != done AND component = Payments</code></div>
+              </div>
+            </div>
+
+            <div class="gadget">
+              <div class="gadget-head">
+                <span class="ttl">Status mix — OPS</span>
+                <span class="ty">· Status breakdown</span>
+              </div>
+              <div class="gadget-body">
+                <div class="agg-row"><span class="lbl">To do</span><div class="agg-track"><div class="agg-fill todo" style="width:34%"></div></div><span class="n">2</span></div>
+                <div class="agg-row"><span class="lbl">IP</span><div class="agg-track"><div class="agg-fill ip" style="width:17%"></div></div><span class="n">1</span></div>
+                <div class="agg-row"><span class="lbl">Review</span><div class="agg-track"><div class="agg-fill review" style="width:17%"></div></div><span class="n">1</span></div>
+                <div class="agg-row"><span class="lbl">Done</span><div class="agg-track"><div class="agg-fill done" style="width:34%"></div></div><span class="n">2</span></div>
+              </div>
+            </div>
+
+            <div class="gadget">
+              <div class="gadget-head">
+                <span class="ttl">SLA breaches</span>
+                <span class="ty">· SLA</span>
+              </div>
+              <div class="gadget-body">
+                <div class="stat-num warn" style="margin-bottom:0.2rem">3</div>
+                <div class="sla-list">
+                  <div class="sla-item"><span class="key">HD-14</span><span class="tag tag--bug">Breached</span><span>Register freezes on refund</span></div>
+                  <div class="sla-item"><span class="key">HD-21</span><span class="tag tag--bug">Breached</span><span>Duplicate charge Nov 1</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="gadget sp-full">
+              <div class="gadget-head">
+                <span class="ttl">Activity</span>
+                <span class="ty">· Recent activity</span>
+              </div>
+              <div class="gadget-body">
+                <div class="act-list">
+                  <div class="act-item"><span class="k">OPS-3</span><span class="msg">Luis moved to In review</span><span class="when">14:22</span></div>
+                  <div class="act-item"><span class="k">OPS-4</span><span class="msg">Diego commented: reproduced on staging</span><span class="when">13:08</span></div>
+                  <div class="act-item"><span class="k">OPS-2</span><span class="msg">Ana set assignee → Luis</span><span class="when">11:40</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div style="margin-top:1rem" class="state-strip">
+        <span class="pill">Populated</span>
+        <span class="pill active">Empty · first-time user</span>
+      </div>
+      <div class="sb-shell">
+        <aside class="sb-rail">
+          <div class="sb-search">
+            <input placeholder="Find dashboard…" disabled>
+            <button class="btn">+</button>
+          </div>
+          <div class="sb-sec">
+            <h4>Pinned</h4>
+            <div style="font-size:10px;color:var(--faint);padding:0.3rem 0.4rem">nothing pinned yet</div>
+          </div>
+          <div class="sb-sec">
+            <h4>Mine · 0</h4>
+            <div style="font-size:10px;color:var(--faint);padding:0.3rem 0.4rem">no dashboards yet</div>
+          </div>
+          <div class="sb-sec">
+            <h4>Shared with me · 2</h4>
+            <div class="sb-item">
+              <span class="ico shared">H</span><span class="nm">Diego · Helpdesk SLA</span>
+            </div>
+            <div class="sb-item">
+              <span class="ico shared">E</span><span class="nm">ENG · lead-time</span>
+            </div>
+          </div>
+          <div class="sb-new">+ New dashboard</div>
+        </aside>
+        <div class="sb-preview" style="display:flex;align-items:center;justify-content:center">
+          <div class="d-empty" style="border:0;background:transparent;padding:0;max-width:380px">
+            <div class="ico" style="font-size:36px;margin-bottom:0.6rem">▦ ▧ ▦</div>
+            <h4>No dashboard open</h4>
+            <p>Pick one from the left, or start a new board from a template. You can also open <a href="#">Diego · Helpdesk SLA</a> that was shared with you.</p>
+            <div class="ctas">
+              <button class="btn btn--primary">+ New from template</button>
+              <button class="btn">Blank board</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       COMPARISON TABLE
+       ═══════════════════════════════════════════ -->
+  <section id="comparison" style="margin-top:2rem">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:0.75rem">Comparison — A through F</h2>
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Concept</th>
+          <th>Scopes</th>
+          <th>Create flow</th>
+          <th>Gadget model</th>
+          <th>Schema cost</th>
+          <th>Best for</th>
+          <th>Risk / gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>A — Jira Gadget Grid</td>
+          <td>Project</td>
+          <td>Unchanged <em>name + description</em>, now with “Add gadget” drawer</td>
+          <td>Current 4 types, 2-col grid</td>
+          <td style="color:var(--ok);font-weight:600">None</td>
+          <td>Ship immediately; iteration of today’s UI with better affordance</td>
+          <td>Not opinionated; no sprint or personal story</td>
+        </tr>
+        <tr>
+          <td>B — Sprint Health Desk</td>
+          <td style="color:#1d4ed8;font-weight:600">Sprint</td>
+          <td>Scope-locked template; sprint picker in toolbar</td>
+          <td>New: burndown, scope-delta, blockers, assignee rollup</td>
+          <td>Medium — sprint-day snapshots, burndown gadget</td>
+          <td>Standup, sprint review, is-this-sprint-cooked question</td>
+          <td>Useless for Kanban; needs daily remaining-points capture</td>
+        </tr>
+        <tr>
+          <td>C — Personal Home</td>
+          <td style="color:#047857;font-weight:600">Personal</td>
+          <td>Auto-provisioned on first login; no form</td>
+          <td>Fixed set: my work, due, mentions, focus, streak</td>
+          <td>Medium — mentions index + focus-block affordance</td>
+          <td>Landing page; morning triage; new-user activation</td>
+          <td>Non-customizable; one board per user by design</td>
+        </tr>
+        <tr>
+          <td>D — Template Gallery</td>
+          <td><span style="color:#1d4ed8;font-weight:600">Sprint</span> · <span style="color:#047857;font-weight:600">Personal</span> · <span style="color:#92400e;font-weight:600">Project</span></td>
+          <td>2-step wizard: template → name &amp; scope</td>
+          <td>Templates own gadget sets</td>
+          <td>Low — template registry, no DB migration</td>
+          <td>First-time creators; onboarding; eliminates empty-canvas paralysis</td>
+          <td>Templates can rot; adds a step power users may want to skip</td>
+        </tr>
+        <tr>
+          <td>E — Mosaic KPI Wall</td>
+          <td>Project</td>
+          <td>Needs edit-mode entry; layout saved on resize</td>
+          <td>Current 4 + 2 new (big_number, sparkline)</td>
+          <td style="color:var(--error);font-weight:600">High — x/y/w/h per gadget</td>
+          <td>Stakeholder read-outs, screenshot moments, exec reviews</td>
+          <td>Easy to make ugly; sparklines need historical data we don’t store</td>
+        </tr>
+        <tr>
+          <td>F — Sidebar + Preview</td>
+          <td><span style="color:#047857;font-weight:600">Personal</span> · <span style="color:#92400e;font-weight:600">Project</span></td>
+          <td>+ button in rail → inline modal (any of D’s templates)</td>
+          <td>Reuses A/B/C body — F is a shell, not a gadget set</td>
+          <td>Low — <code>pinned</code> + <code>shared_with</code></td>
+          <td>Users with 3+ boards; mirrors Linear/Notion muscle memory</td>
+          <td>Breaks list-detail URL semantics; empty right pane for new users</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="border:1px solid var(--border);background:var(--surface);padding:1rem;margin-top:1rem">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:0.5rem">Which letter should we implement?</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:0.75rem">
+        These compose into layers rather than compete. Minimal viable path: <strong>D</strong> (templates) <em>on top of</em> <strong>A</strong> (grid) ships almost immediately with no DB migration — users get Sprint / Personal / Project pre-populated boards, A keeps running underneath. Layer <strong>F</strong> next for multi-board power users, and <strong>B</strong>/<strong>C</strong>/<strong>E</strong> can be <em>template bodies</em> that D creates. Pick a primary letter — or the <strong>A + D</strong> combo as the shippable v1.
+      </p>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:default">A</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:default">B</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:default">C</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;background:var(--accent);color:#fff;font-size:16px;font-weight:700;cursor:default">D</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:default">E</span>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid var(--accent);font-size:16px;font-weight:700;color:var(--accent);cursor:default">F</span>
+      </div>
+      <p style="font-size:11px;color:var(--faint);margin-top:0.6rem">
+        Suggested combo: <strong>A + D</strong> as v1 (ship this sprint), <strong>F</strong> as v2 (next sprint), <strong>B</strong>/<strong>C</strong>/<strong>E</strong> as template bodies behind D.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Current dashboards screenshot reference ── -->
+  <section style="margin-top:2rem">
+    <h2 style="font-size:14px;font-weight:600;margin-bottom:0.5rem;color:var(--muted)">Reference — Current /dashboards</h2>
+    <p style="font-size:11px;color:var(--faint);margin-bottom:0.5rem">
+      Screenshot of the live <code>/dashboards</code> page these concepts aim to improve: bare <em>Name / Description / Create</em> form on top of a flat table.
+    </p>
+    <div style="border:1px solid var(--border);background:var(--surface);padding:0.5rem;max-width:900px">
+      <img src="../assets/dashboards-current.png" alt="Current Quetzal Dashboards screenshot"
+           style="width:100%;display:block;border:1px solid var(--border)"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <p style="display:none;font-size:11px;color:var(--faint);padding:1rem;text-align:center">
+        (Screenshot not found — see attached image in ticket)
+      </p>
+    </div>
+  </section>
+</div>
+
+</body>
+</html>

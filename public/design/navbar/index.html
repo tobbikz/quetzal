@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quetzal · Navbar options</title>
+    <style>
+      :root {
+        --bg: #f3f5f8;
+        --ink: #0f172a;
+        --mute: #64748b;
+        --line: #e2e8f0;
+        --panel: #fff;
+        --blue: #2563eb;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "DM Sans", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.45;
+      }
+      header {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 1rem;
+      }
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.65rem;
+        letter-spacing: -0.03em;
+      }
+      p.lead {
+        margin: 0;
+        color: var(--mute);
+        max-width: 40rem;
+      }
+      .grid {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0.5rem 1.25rem 3rem;
+        display: grid;
+        gap: 1.25rem;
+      }
+      article {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem 1rem;
+        padding: 0.9rem 1.1rem 0.75rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .meta h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+      }
+      .meta .letter {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.6rem;
+        height: 1.6rem;
+        margin-right: 0.45rem;
+        border-radius: 6px;
+        background: #eff6ff;
+        color: var(--blue);
+        font-size: 0.85rem;
+        font-weight: 800;
+      }
+      .meta p {
+        margin: 0.25rem 0 0;
+        color: var(--mute);
+        font-size: 0.9rem;
+      }
+      .lean {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--blue);
+        background: #eff6ff;
+        border-radius: 6px;
+        padding: 0.2rem 0.5rem;
+      }
+      figure {
+        margin: 0;
+        background: #eef2f7;
+      }
+      figure a { display: block; }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        vertical-align: top;
+      }
+      .zoom {
+        padding: 0.65rem 1.1rem 0.9rem;
+        font-size: 0.85rem;
+      }
+      .zoom a {
+        color: var(--blue);
+        font-weight: 650;
+        text-decoration: none;
+      }
+      .zoom a:hover { text-decoration: underline; }
+      footer {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 1.25rem 2.5rem;
+        color: var(--mute);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Navbar options — más cuadrado, con aire</h1>
+      <p class="lead">
+        Elige A–E y dímelo en el chat. Clic en una imagen para verla a tamaño completo.
+      </p>
+    </header>
+
+    <div class="grid">
+      <article>
+        <div class="meta">
+          <div>
+            <h2><span class="letter">A</span>Hairline square</h2>
+            <p>Chip activo suave + CTA rectangular. Lo más cerca del actual, sin pills.</p>
+          </div>
+        </div>
+        <figure>
+          <a href="./a-hairline.jpg" target="_blank" rel="noopener">
+            <img src="./a-hairline.jpg" alt="Navbar option A Hairline square" />
+          </a>
+        </figure>
+        <div class="zoom"><a href="./a-hairline.jpg" target="_blank" rel="noopener">Abrir imagen completa</a></div>
+      </article>
+
+      <article>
+        <div class="meta">
+          <div>
+            <h2><span class="letter">B</span>Underline tabs</h2>
+            <p>Sin pill de activo — solo subrayado azul. Más serio / aireado.</p>
+          </div>
+          <span class="lean">Lean</span>
+        </div>
+        <figure>
+          <a href="./b-underline.jpg" target="_blank" rel="noopener">
+            <img src="./b-underline.jpg" alt="Navbar option B Underline tabs" />
+          </a>
+        </figure>
+        <div class="zoom"><a href="./b-underline.jpg" target="_blank" rel="noopener">Abrir imagen completa</a></div>
+      </article>
+
+      <article>
+        <div class="meta">
+          <div>
+            <h2><span class="letter">C</span>Segmented workspaces</h2>
+            <p>Work / Wiki / Helpdesk / Admin dentro de un bloque segmentado.</p>
+          </div>
+        </div>
+        <figure>
+          <a href="./c-segment.jpg" target="_blank" rel="noopener">
+            <img src="./c-segment.jpg" alt="Navbar option C Segmented" />
+          </a>
+        </figure>
+        <div class="zoom"><a href="./c-segment.jpg" target="_blank" rel="noopener">Abrir imagen completa</a></div>
+      </article>
+
+      <article>
+        <div class="meta">
+          <div>
+            <h2><span class="letter">D</span>Soft square chips</h2>
+            <p>Activo square fill + cluster derecho con bandeja ligera.</p>
+          </div>
+        </div>
+        <figure>
+          <a href="./d-soft-square.jpg" target="_blank" rel="noopener">
+            <img src="./d-soft-square.jpg" alt="Navbar option D Soft square" />
+          </a>
+        </figure>
+        <div class="zoom"><a href="./d-soft-square.jpg" target="_blank" rel="noopener">Abrir imagen completa</a></div>
+      </article>
+
+      <article>
+        <div class="meta">
+          <div>
+            <h2><span class="letter">E</span>Split brand rail</h2>
+            <p>Zona de marca separada + tray de acciones. Más editorial.</p>
+          </div>
+        </div>
+        <figure>
+          <a href="./e-split.jpg" target="_blank" rel="noopener">
+            <img src="./e-split.jpg" alt="Navbar option E Split brand" />
+          </a>
+        </figure>
+        <div class="zoom"><a href="./e-split.jpg" target="_blank" rel="noopener">Abrir imagen completa</a></div>
+      </article>
+    </div>
+
+    <footer>
+      Cuando elijas, responde en el chat con la letra (A–E). Sin cambios de CSS hasta entonces.
+    </footer>
+  </body>
+</html>
