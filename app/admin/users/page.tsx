@@ -1,6 +1,11 @@
 import Link from 'next/link';
-import { listUsers } from '@/lib/db';
-import { setUserRoleAction } from '@/app/admin/users/actions';
+import {
+  createLocalUserAction,
+  resetLocalPasswordAction,
+  setUserRoleAction,
+  toggleUserDisabledAction,
+} from '@/app/admin/users/actions';
+import { listUserAuthRecords } from '@/lib/db';
 
 export default async function AdminUsersPage({
   searchParams,
@@ -8,7 +13,7 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
   const params = await searchParams;
-  const people = await listUsers();
+  const people = await listUserAuthRecords();
 
   return (
     <>
@@ -28,15 +33,15 @@ export default async function AdminUsersPage({
           <div>
             <h1 className="page-title">Users</h1>
             <p className="page-sub">
-              Application roles: admin, member, viewer. The last admin cannot be demoted.
+              Local password accounts and LDAP-mirrored users. Roles: admin, member, viewer.
             </p>
           </div>
           <div className="row-actions">
+            <Link className="btn-secondary" href="/settings/ldap">
+              LDAP
+            </Link>
             <Link className="btn-secondary" href="/admin/audit">
               Audit
-            </Link>
-            <Link className="btn-secondary" href="/admin/backup">
-              Backup
             </Link>
           </div>
         </div>
@@ -46,15 +51,64 @@ export default async function AdminUsersPage({
             {params.error === 'last_admin'
               ? 'Cannot demote the last admin.'
               : params.error === 'invalid'
-                ? 'Invalid role.'
-                : 'Could not update role.'}
+                ? 'Invalid role or user.'
+                : params.error === 'create'
+                  ? 'Name, email, and password (6+ chars) are required.'
+                  : params.error === 'exists'
+                    ? 'That email already exists.'
+                    : params.error === 'password'
+                      ? 'Password must be at least 6 characters.'
+                      : params.error === 'self'
+                        ? 'You cannot disable your own account.'
+                        : 'Could not update user.'}
           </p>
         ) : null}
         {params.saved === '1' ? (
           <p className="muted" style={{ marginBottom: '0.75rem' }}>
-            Role updated.
+            User updated.
           </p>
         ) : null}
+        {params.saved === 'created' ? (
+          <p className="muted" style={{ marginBottom: '0.75rem' }}>
+            Local user created.
+          </p>
+        ) : null}
+        {params.saved === 'password' ? (
+          <p className="muted" style={{ marginBottom: '0.75rem' }}>
+            Password updated.
+          </p>
+        ) : null}
+
+        <section className="panel" style={{ marginBottom: '1rem' }}>
+          <div className="panel-head">Create local user</div>
+          <form className="panel-body stack" action={createLocalUserAction}>
+            <label className="field">
+              <span>Name</span>
+              <input type="text" name="name" required maxLength={80} />
+            </label>
+            <label className="field">
+              <span>Email</span>
+              <input type="email" name="email" required autoComplete="off" />
+            </label>
+            <label className="field">
+              <span>Password</span>
+              <input type="password" name="password" required minLength={6} autoComplete="new-password" />
+            </label>
+            <label className="field">
+              <span>Role</span>
+              <select name="role" defaultValue="member">
+                <option value="member">member</option>
+                <option value="viewer">viewer</option>
+                <option value="admin">admin</option>
+              </select>
+            </label>
+            <div className="row-actions">
+              <button type="submit" className="btn">
+                Create user
+              </button>
+            </div>
+          </form>
+        </section>
 
         <section className="panel">
           <div className="panel-head">People ({people.length})</div>
@@ -64,8 +118,10 @@ export default async function AdminUsersPage({
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
+                  <th>Source</th>
                   <th>Role</th>
-                  <th />
+                  <th>Password</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,13 +130,14 @@ export default async function AdminUsersPage({
                     <td>{person.name}</td>
                     <td className="muted">{person.email}</td>
                     <td>
+                      <span className={person.authSource === 'ldap' ? 'tag tag--info' : 'tag tag--muted'}>
+                        {person.authSource}
+                      </span>
+                    </td>
+                    <td>
                       <form action={setUserRoleAction} className="row-actions" style={{ gap: '0.35rem' }}>
                         <input type="hidden" name="user_id" value={person.id} />
-                        <label className="sr" htmlFor={`role-${person.id}`}>
-                          Role for {person.name}
-                        </label>
                         <select
-                          id={`role-${person.id}`}
                           name="role"
                           defaultValue={person.role}
                           aria-label={`Role for ${person.name}`}
@@ -94,7 +151,34 @@ export default async function AdminUsersPage({
                         </button>
                       </form>
                     </td>
-                    <td className="muted">#{person.id}</td>
+                    <td>
+                      <form action={resetLocalPasswordAction} className="row-actions" style={{ gap: '0.35rem' }}>
+                        <input type="hidden" name="user_id" value={person.id} />
+                        <input
+                          type="password"
+                          name="password"
+                          placeholder={person.passwordHash ? 'Reset…' : 'Set…'}
+                          minLength={6}
+                          autoComplete="new-password"
+                          style={{ width: '8rem' }}
+                        />
+                        <button type="submit" className="btn-secondary">
+                          Set
+                        </button>
+                      </form>
+                    </td>
+                    <td>
+                      <form action={toggleUserDisabledAction} className="row-actions">
+                        <input type="hidden" name="user_id" value={person.id} />
+                        <input type="hidden" name="disabled" value={person.disabled ? '0' : '1'} />
+                        <span className={person.disabled ? 'tag tag--error' : 'tag tag--ok'}>
+                          {person.disabled ? 'Disabled' : 'Active'}
+                        </span>
+                        <button type="submit" className="btn-secondary">
+                          {person.disabled ? 'Enable' : 'Disable'}
+                        </button>
+                      </form>
+                    </td>
                   </tr>
                 ))}
               </tbody>

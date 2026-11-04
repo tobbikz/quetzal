@@ -145,6 +145,12 @@ export function Sidebar({
             >
               Integrations
             </Link>
+            <Link
+              href="/settings/ldap"
+              className={`sidebar-link${path.startsWith('/settings/ldap') ? ' on' : ''}`}
+            >
+              LDAP
+            </Link>
             <Link href="/settings/sso" className={`sidebar-link${path.startsWith('/settings/sso') ? ' on' : ''}`}>
               SSO
             </Link>

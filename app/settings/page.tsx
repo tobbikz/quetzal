@@ -7,6 +7,11 @@ const LINKS = [
     blurb: 'Outbound webhooks, Slack Incoming Webhook, and connectors.',
   },
   {
+    href: '/settings/ldap',
+    title: 'LDAP',
+    blurb: 'Directory bind for corporate users; local passwords stay available.',
+  },
+  {
     href: '/settings/sso',
     title: 'SSO',
     blurb: 'SAML ACS + OIDC authorization code for local sign-in.',

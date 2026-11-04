@@ -26,13 +26,15 @@ Not Atlassian, and **not** the Hacienda / facturación “Quetzal FE” product.
 - Customer portal for requesters
 - Automation rules (admin)
 
-## Integrations
+## Integrations & auth
 
 - Settings → Integrations: outbound issue webhooks + Slack Incoming Webhook
-- Notifications: SMTP + Slack channel config (`QUETZAL_SMTP_*`, `QUETZAL_SLACK_WEBHOOK`)
+- Settings → LDAP: directory bind + JIT local mirror users
+- Notifications: SMTP + Slack (`QUETZAL_SMTP_*`, `QUETZAL_SLACK_WEBHOOK`)
 - SSO: SAML ACS + OIDC
+- Admin → Users: create local accounts, reset passwords, disable users
 
-Demo auth: seeded users (e.g. `ana@example.com`) accept any non-empty password.
+Demo local password for seeded users: `quetzal` (e.g. `ana@example.com` / `quetzal`).
 
 ## Database
 

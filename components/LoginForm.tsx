@@ -9,11 +9,13 @@ export function LoginForm({
   next,
   error,
   ssoEnabled = false,
+  quickLogin = false,
 }: {
   people: User[];
   next?: string;
   error?: boolean;
   ssoEnabled?: boolean;
+  quickLogin?: boolean;
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const ssoHref = next ? `/login/sso?next=${encodeURIComponent(next)}` : '/login/sso';
@@ -44,8 +46,8 @@ export function LoginForm({
               name="password"
               autoComplete="current-password"
               required
-              placeholder="Any password (demo)"
-              defaultValue="demo"
+              placeholder="Password"
+              defaultValue="quetzal"
             />
             <button
               type="button"
@@ -68,7 +70,6 @@ export function LoginForm({
             </button>
           </span>
         </label>
-        <a className="login-forgot" href="#demo">Forgot password?</a>
         <button className="login-submit" type="submit">Log in</button>
       </form>
 
@@ -96,26 +97,29 @@ export function LoginForm({
         Continue with passkey
       </button>
       <p className="login-passkey-note">
-        Demo mode: use a seeded email and any password. Passkeys are next.
+        Local accounts use a password. LDAP and SSO work when enabled in Settings.
+        Seeded demo password: <code>quetzal</code>.
       </p>
 
-      <div id="demo" className="login-quick">
-        <div className="login-quick-label">Quick demo</div>
-        <div className="login-quick-list">
-          {people.map((person) => (
-            <form key={person.id} action={loginAsUserAction}>
-              <input type="hidden" name="user" value={person.id} />
-              <button type="submit">
-                <span className="avatar">{person.name.slice(0, 1)}</span>
-                <span>
-                  <strong>{person.name}</strong>
-                  <span className="muted">{person.email}</span>
-                </span>
-              </button>
-            </form>
-          ))}
+      {quickLogin ? (
+        <div id="demo" className="login-quick">
+          <div className="login-quick-label">Quick login (dev)</div>
+          <div className="login-quick-list">
+            {people.map((person) => (
+              <form key={person.id} action={loginAsUserAction}>
+                <input type="hidden" name="user" value={person.id} />
+                <button type="submit">
+                  <span className="avatar">{person.name.slice(0, 1)}</span>
+                  <span>
+                    <strong>{person.name}</strong>
+                    <span className="muted">{person.email}</span>
+                  </span>
+                </button>
+              </form>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

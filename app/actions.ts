@@ -16,7 +16,6 @@ import {
   deleteCalendarEvent,
   deleteEventType,
   getIssue,
-  getUserByEmail,
   markAllNotificationsRead,
   markNotificationRead,
   saveIssueField,
@@ -203,21 +202,21 @@ export async function loginAction(formData: FormData): Promise<void> {
   const email = text(formData.get('email'), 120).toLowerCase();
   const password = text(formData.get('password'), 120);
   const jar = await cookies();
-  const user = await getUserByEmail(email);
+  const { authenticatePassword } = await import('@/lib/auth');
+  const result = await authenticatePassword(email, password);
 
-  if (!user || !password) {
+  if (!result.ok) {
     redirect('/login?error=1');
   }
 
-  // Demo auth: any non-empty password works for seeded users.
-  jar.set('quetzal_uid', String(user.id), { path: '/' });
+  jar.set('quetzal_uid', String(result.user.id), { path: '/' });
   jar.set('quetzal_auth', '1', { path: '/' });
   await writeAudit({
-    actorId: user.id,
+    actorId: result.user.id,
     action: 'login',
     entityType: 'user',
-    entityId: user.id,
-    detail: 'password',
+    entityId: result.user.id,
+    detail: result.via === 'ldap' ? 'ldap' : 'password',
   });
   redirect(nextPath(formData, '/'));
 }
@@ -230,6 +229,8 @@ export async function logoutAction(): Promise<void> {
 }
 
 export async function loginAsUserAction(formData: FormData): Promise<void> {
+  const { quickLoginAllowed } = await import('@/lib/auth');
+  if (!quickLoginAllowed()) redirect('/login?error=1');
   const jar = await cookies();
   const id = optionalId(formData.get('user'));
   if (!id) redirect('/login?error=1');

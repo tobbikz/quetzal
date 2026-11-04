@@ -335,6 +335,7 @@ export function buildDefaultCommands(opts: {
     ? [
         { id: 'settings', label: 'Settings hub', href: '/settings', group: 'Admin' },
         { id: 'integrations', label: 'Integrations', href: '/settings/integrations', group: 'Admin' },
+        { id: 'ldap', label: 'LDAP', href: '/settings/ldap', group: 'Admin' },
         { id: 'sso', label: 'SSO', href: '/settings/sso', group: 'Admin' },
         { id: 'fields', label: 'Custom fields', href: '/settings/fields', group: 'Admin' },
         { id: 'sites', label: 'Sites', href: '/settings/sites', group: 'Admin' },

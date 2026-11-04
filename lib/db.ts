@@ -69,6 +69,51 @@ function mapUser(row: Record<string, unknown>): User {
   };
 }
 
+export type AuthSource = 'local' | 'ldap';
+
+export type UserAuthRecord = User & {
+  passwordHash: string | null;
+  authSource: AuthSource;
+  disabled: boolean;
+};
+
+function mapUserAuth(row: Record<string, unknown>): UserAuthRecord {
+  const source = String(row.auth_source ?? 'local');
+  return {
+    ...mapUser(row),
+    passwordHash:
+      row.password_hash == null || row.password_hash === ''
+        ? null
+        : String(row.password_hash),
+    authSource: source === 'ldap' ? 'ldap' : 'local',
+    disabled:
+      row.disabled === true ||
+      Number(row.disabled ?? 0) === 1 ||
+      String(row.disabled) === 't',
+  };
+}
+
+let authColumnsReady: Promise<void> | null = null;
+
+/** Idempotent columns for local/LDAP auth (also in migration 006). */
+export async function ensureAuthColumns(): Promise<void> {
+  if (!authColumnsReady) {
+    authColumnsReady = (async () => {
+      await qRun(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT`);
+      await qRun(
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_source TEXT NOT NULL DEFAULT 'local'`,
+      );
+      await qRun(
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT FALSE`,
+      );
+    })().catch((err) => {
+      authColumnsReady = null;
+      throw err;
+    });
+  }
+  await authColumnsReady;
+}
+
 function mapNotification(row: Record<string, unknown>): Notification {
   return {
     id: Number(row.id),
@@ -198,19 +243,118 @@ function mapPage(row: Record<string, unknown>): WikiPage {
 // })();
 
 export async function listUsers(): Promise<User[]> {
+  await ensureAuthColumns();
   return ((await qAll('SELECT * FROM users ORDER BY id')) as Record<string, unknown>[]).map(mapUser);
 }
 
+export async function listUserAuthRecords(): Promise<UserAuthRecord[]> {
+  await ensureAuthColumns();
+  return ((await qAll('SELECT * FROM users ORDER BY id')) as Record<string, unknown>[]).map(
+    mapUserAuth,
+  );
+}
+
 export async function getUser(id: number): Promise<User | undefined> {
+  await ensureAuthColumns();
   const row = (await qGet('SELECT * FROM users WHERE id = ?', [id])) as Record<string, unknown> | undefined;
   return row ? mapUser(row) : undefined;
 }
 
 export async function getUserByEmail(email: string): Promise<User | undefined> {
+  await ensureAuthColumns();
   const normalized = email.trim().toLowerCase();
   if (!normalized) return undefined;
   const row = (await qGet('SELECT * FROM users WHERE lower(email) = ? LIMIT 1', [normalized])) as Record<string, unknown> | undefined;
   return row ? mapUser(row) : undefined;
+}
+
+export async function getUserAuthByEmail(email: string): Promise<UserAuthRecord | undefined> {
+  await ensureAuthColumns();
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return undefined;
+  const row = (await qGet('SELECT * FROM users WHERE lower(email) = ? LIMIT 1', [normalized])) as
+    | Record<string, unknown>
+    | undefined;
+  return row ? mapUserAuth(row) : undefined;
+}
+
+export async function getUserAuth(id: number): Promise<UserAuthRecord | undefined> {
+  await ensureAuthColumns();
+  const row = (await qGet('SELECT * FROM users WHERE id = ?', [id])) as
+    | Record<string, unknown>
+    | undefined;
+  return row ? mapUserAuth(row) : undefined;
+}
+
+export async function setUserPassword(userId: number, passwordHash: string): Promise<void> {
+  await ensureAuthColumns();
+  await qRun(
+    `UPDATE users SET password_hash = ?, auth_source = 'local' WHERE id = ?`,
+    [passwordHash, userId],
+  );
+}
+
+export async function setUserAuthSource(userId: number, source: AuthSource): Promise<void> {
+  await ensureAuthColumns();
+  await qRun(`UPDATE users SET auth_source = ? WHERE id = ?`, [source, userId]);
+}
+
+export async function setUserDisabled(userId: number, disabled: boolean): Promise<void> {
+  await ensureAuthColumns();
+  await qRun(`UPDATE users SET disabled = ? WHERE id = ?`, [disabled, userId]);
+}
+
+const DEFAULT_SEED_PASSWORD = 'quetzal';
+let seedPasswordsReady: Promise<void> | null = null;
+
+/** Give existing local users without a hash the demo password `quetzal`. */
+export async function ensureSeedLocalPasswords(): Promise<void> {
+  if (process.env.QUETZAL_SEED_PASSWORDS === '0') return;
+  if (!seedPasswordsReady) {
+    seedPasswordsReady = (async () => {
+      await ensureAuthColumns();
+      const { hashPassword } = await import('@/lib/passwords');
+      const rows = (await qAll(
+        `SELECT id FROM users
+          WHERE (password_hash IS NULL OR password_hash = '')
+            AND COALESCE(auth_source, 'local') = 'local'`,
+      )) as Array<{ id: number }>;
+      if (!rows.length) return;
+      const hash = hashPassword(DEFAULT_SEED_PASSWORD);
+      for (const row of rows) {
+        await qRun(`UPDATE users SET password_hash = ?, auth_source = 'local' WHERE id = ?`, [
+          hash,
+          row.id,
+        ]);
+      }
+    })().catch((err) => {
+      seedPasswordsReady = null;
+      throw err;
+    });
+  }
+  await seedPasswordsReady;
+}
+
+export async function createLocalUser(input: {
+  name: string;
+  email: string;
+  role: UserRole;
+  passwordHash: string;
+}): Promise<User> {
+  await ensureAuthColumns();
+  const normalized = input.email.trim().toLowerCase();
+  if (!normalized.includes('@')) throw new Error('A valid email is required');
+  const display = input.name.trim().slice(0, 80) || normalized.split('@')[0] || 'User';
+  const role: UserRole =
+    input.role === 'admin' || input.role === 'viewer' ? input.role : 'member';
+  const id = await qInsertReturningId(
+    `INSERT INTO users (name, email, role, password_hash, auth_source, disabled)
+     VALUES (?, ?, ?, ?, 'local', FALSE)`,
+    [display, normalized, role, input.passwordHash],
+  );
+  const user = await getUser(id);
+  if (!user) throw new Error('Failed to create user');
+  return user;
 }
 
 /** Create a user when email is unknown; returns existing row when already present. */
@@ -218,7 +362,9 @@ export async function ensureUserByEmail(
   email: string,
   name?: string,
   role: UserRole = 'member',
+  authSource: AuthSource = 'local',
 ): Promise<User> {
+  await ensureAuthColumns();
   const normalized = email.trim().toLowerCase();
   if (!normalized || !normalized.includes('@')) {
     throw new Error('A valid email is required');
@@ -229,11 +375,10 @@ export async function ensureUserByEmail(
     (name?.trim() || normalized.split('@')[0] || 'User').replace(/\s+/g, ' ').slice(0, 80) || 'User';
   const safeRole: UserRole =
     role === 'admin' || role === 'viewer' || role === 'member' ? role : 'member';
-  const id = await qInsertReturningId(`INSERT INTO users (name, email, role) VALUES (?, ?, ?)`, [
-    display,
-    normalized,
-    safeRole,
-  ]);
+  const id = await qInsertReturningId(
+    `INSERT INTO users (name, email, role, auth_source) VALUES (?, ?, ?, ?)`,
+    [display, normalized, safeRole, authSource === 'ldap' ? 'ldap' : 'local'],
+  );
   const user = await getUser(id);
   if (!user) throw new Error('Failed to create user');
   return user;
