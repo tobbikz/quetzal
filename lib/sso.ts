@@ -83,7 +83,7 @@ export async function ensureSso(): Promise<void> {
     await qRun(`INSERT INTO sso_settings (
          id, enabled, entity_id, acs_path, idp_metadata_text,
          oidc_issuer, oidc_client_id, oidc_client_secret, oidc_redirect_uri, updated_at
-       ) VALUES (1, 0, ?, ?, '', '', '', '', ?, ?)`, [SSO_DEFAULT_ENTITY_ID, SSO_ACS_PATH, SSO_OIDC_CALLBACK_URL, stamp()]);
+       ) VALUES (1, FALSE, ?, ?, '', '', '', '', ?, ?)`, [SSO_DEFAULT_ENTITY_ID, SSO_ACS_PATH, SSO_OIDC_CALLBACK_URL, stamp()]);
   }
 }
 
@@ -147,7 +147,7 @@ export async function saveSsoSettings(input: {
      SET enabled = ?, entity_id = ?, acs_path = ?, idp_metadata_text = ?,
          oidc_issuer = ?, oidc_client_id = ?, oidc_client_secret = ?, oidc_redirect_uri = ?,
          updated_at = ?
-     WHERE id = 1`, [input.enabled ? 1 : 0,
+     WHERE id = 1`, [input.enabled,
     entityId,
     SSO_ACS_PATH,
     idpMetadataText,

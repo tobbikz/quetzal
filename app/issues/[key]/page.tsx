@@ -726,7 +726,7 @@ export default async function IssuePage({
               ) : null}
             </div>
           </details>
-          <details className="idesk-rail-fold" defaultOpen={links.length > 0}>
+          <details className="idesk-rail-fold" open={links.length > 0 || undefined}>
             <summary className="idesk-rail-fold-sum">
               Linked issues
               <span className="idesk-rail-fold-meta">{links.length || '0'}</span>

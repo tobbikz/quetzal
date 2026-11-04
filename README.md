@@ -1,114 +1,78 @@
 # Quetzal
 
-Open-source **work · wiki · helpdesk** desk for a small company. Apache 2.0.
+Open-source **work · wiki · helpdesk** desk for a small company. **Apache-2.0**.
 
-**Public repo:** [github.com/tobbikz/quetzal](https://github.com/tobbikz/quetzal)
+**GitHub:** [github.com/tobbikz/quetzal](https://github.com/tobbikz/quetzal) · release **v0.1.0**
 
-Not Atlassian, and **not** the Hacienda / facturación “Quetzal FE” product. This repo is the daily ops desk: Portal, Work, Board, Filters (QQL), Calendar, Roadmap, Releases, Dashboards, Wiki, Helpdesk, Automation, Settings (SSO + Integrations).
+Not Atlassian, and **not** the Hacienda / facturación “Quetzal FE” product.
 
-## Work
+![Login](docs/screenshots/login.png)
 
-- Projects, with a lead
-- Issue types: epic, story, task, bug, sub-task
-- Status, priority, assignee, reporter, sprint, points, labels, parent
-- Active-sprint board (drag a card to change status)
-- Backlog grouped by sprint
-- Issue detail, field editor, and comments
-
-## Wiki
-
-- Spaces and a page tree
-- Editor, page comments
-- Templates: blank, meeting, decision, how-to
-- Search across issues and pages
-
-## Helpdesk & Portal
-
-- Agent desk (queues, SLA, triage) for helpdesk agents
-- Customer portal for requesters
-- Automation rules (admin)
-
-## Integrations & auth
-
-- Settings → Integrations: outbound issue/helpdesk webhooks, Slack, Teams, GitHub receiver, email inbound
-- Helpdesk: macros, CSAT (`/csat/<token>`), email inbound API
-- Settings → LDAP: directory bind + JIT local mirror users
-- Ops notes: `docs/ops-auth-integrations.md` · go-live: `docs/go-live.md`
-- Notifications: SMTP + Slack (`QUETZAL_SMTP_*`, `QUETZAL_SLACK_WEBHOOK`)
-- GitHub: inbound webhook sync + optional outbound comments (`QUETZAL_GITHUB_TOKEN`)
-- SSO: SAML ACS + OIDC
-- Admin → Users: create local accounts, reset passwords, disable users
-
-Demo local password for seeded users: `quetzal` (e.g. `ana@example.com` / `quetzal`).
-
-## Database
-
-Application data targets **PostgreSQL** database `quetzal`, schema **`quetzal`** (ADR `quetzal-postgres-ssot`).
-
-| Context | DSN |
-| --- | --- |
-| Local host (peer / trust) | `postgresql://tomy.berrios@127.0.0.1:5432/quetzal` |
-| Docker Compose (`db` service) | `postgresql://quetzal:quetzal@db:5432/quetzal` |
-| Compose Postgres on host | `postgresql://quetzal:quetzal@127.0.0.1:5433/quetzal` |
+## 5-minute quickstart (Docker)
 
 ```bash
-export QUETZAL_DATABASE_URL='postgresql://tomy.berrios@127.0.0.1:5432/quetzal'
-# optional alias also accepted by some tooling: DATABASE_URL
-psql "$QUETZAL_DATABASE_URL" -f db/migrations/001_init.sql
-psql "$QUETZAL_DATABASE_URL" -f db/seed.sql
-```
-
-SQLite→Postgres column map: [`docs/db-mapping.md`](docs/db-mapping.md). Compose first-boot runs `db/docker-init/00-create-schema.sql` (schema only). App driver cutover is **QZ-PG-2**; until then local `data/quetzal.db` may still back some modules.
-
-## Run (dev)
-
-```bash
-cp .env.example .env   # optional
-npm install
-npm run dev
-```
-
-Open http://127.0.0.1:3210
-
-Health (Postgres ping): http://127.0.0.1:3210/api/health
-
-## Docker
-
-Multi-stage Next image (`output: 'standalone'`) plus Postgres 16:
-
-```bash
-# Postgres only (safe while the Next tree is mid-cutover):
-docker compose up -d db
-
-# Full stack (needs a green `npm run build` / QZ-PG-2):
+git clone https://github.com/tobbikz/quetzal.git
+cd quetzal
+cp .env.example .env
+# Edit .env: set QUETZAL_PG_PASSWORD + QUETZAL_AUTOMATION_CRON_SECRET (long random)
 docker compose up --build -d
+curl -fsS http://127.0.0.1:3210/api/health
 ```
 
-Smoke the DSN + JSON logger without the app container:
+Open:
+
+| Surface | URL |
+|---------|-----|
+| App / login | http://127.0.0.1:3210/login |
+| Portal | http://127.0.0.1:3210/portal |
+| Mailpit (captured mail) | http://127.0.0.1:8025 |
+| Health | http://127.0.0.1:3210/api/health |
+
+Seeded demo login (after first boot with `QUETZAL_SEED_PASSWORDS=1`): **`ana@example.com` / `quetzal`**.
+
+Smoke script:
 
 ```bash
-QUETZAL_DATABASE_URL='postgresql://quetzal:quetzal@127.0.0.1:5433/quetzal' \
-  npx tsx scripts/ops-smoke.ts
+export QUETZAL_AUTOMATION_CRON_SECRET="$(grep QUETZAL_AUTOMATION_CRON_SECRET .env | cut -d= -f2-)"
+./scripts/docker-smoke.sh
 ```
 
-- App: http://127.0.0.1:3210  
-- Health: http://127.0.0.1:3210/api/health — JSON `{ status, db: { ok, latencyMs } }`  
-- Logs: structured JSON lines from `lib/log.ts` (`ts`, `level`, `msg`, `service`)
+## Screenshots
+
+| Login | Portal |
+|-------|--------|
+| ![Login](docs/screenshots/login.png) | ![Portal](docs/screenshots/portal.png) |
+
+| Work | Helpdesk |
+|------|----------|
+| ![Work](docs/screenshots/work.png) | ![Helpdesk](docs/screenshots/helpdesk.png) |
+
+## What you get
+
+- **Work** — projects, issues, board, QQL filters, calendar, roadmap, releases, dashboards  
+- **Wiki** — spaces, page tree, templates  
+- **Helpdesk** — agent desk, SLA, macros, CSAT, portal  
+- **Integrations** — webhooks, Slack/Teams, GitHub sync, email inbound API  
+- **Auth** — local scrypt passwords, optional LDAP/SSO  
+
+## Local dev (without Docker app)
 
 ```bash
-docker compose logs -f app
-curl -sS http://127.0.0.1:3210/api/health
+cp .env.example .env
+npm install
+export QUETZAL_DATABASE_URL='postgresql://…/quetzal'
+npm run migrate
+npm run dev   # http://127.0.0.1:3210
 ```
 
-After first boot, apply migrations into the Compose DB if not already loaded:
+## Production notes
 
-```bash
-docker compose exec -T db \
-  psql -U quetzal -d quetzal -f /migrations/001_init.sql
-```
+- Compose runs **`NODE_ENV=production`** and forces `QUETZAL_DEMO_AUTH=0` / `QUETZAL_QUICK_LOGIN=0`
+- Cron container hits `POST /api/automation/tick` every **15 minutes** (Bearer secret)
+- Default SMTP is **Mailpit**; point `QUETZAL_SMTP_*` at your provider for real mail
+- GitHub outbound comments need a **fresh** `QUETZAL_GITHUB_TOKEN` (never commit it)
+- Ops: [`docs/go-live.md`](docs/go-live.md) · auth: [`docs/ops-auth-integrations.md`](docs/ops-auth-integrations.md)
 
-(Requires `db/migrations/001_init.sql` from the Postgres DDL ticket.)
+## License
 
-## Go-live
-
-See [`docs/go-live.md`](docs/go-live.md) for env secrets, backups, cron (`/api/automation/tick`), and smoke checks.
+Apache License 2.0 — see [`LICENSE`](LICENSE).

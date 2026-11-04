@@ -54,7 +54,7 @@ export async function ensureNotificationChannels(): Promise<void> {
     await qRun(`INSERT INTO notification_channels (
            id, mail_enabled, slack_enabled, smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from,
            slack_webhook_url, updated_at
-         ) VALUES (1, 0, 0, '', 587, '', '', '', '', ?)`, [stamp()]);
+         ) VALUES (1, FALSE, FALSE, '', 587, '', '', '', '', ?)`, [stamp()]);
   }
 }
 
@@ -63,8 +63,14 @@ function mapSettings(row: Record<string, unknown>): NotifyChannelSettings {
   const port = Number(row.smtp_port);
   return {
     id: Number(row.id),
-    mailEnabled: Number(row.mail_enabled) === 1,
-    slackEnabled: Number(row.slack_enabled) === 1,
+    mailEnabled:
+      row.mail_enabled === true ||
+      Number(row.mail_enabled ?? 0) === 1 ||
+      String(row.mail_enabled) === 't',
+    slackEnabled:
+      row.slack_enabled === true ||
+      Number(row.slack_enabled ?? 0) === 1 ||
+      String(row.slack_enabled) === 't',
     smtpHost: String(row.smtp_host ?? ''),
     smtpPort: Number.isFinite(port) && port > 0 ? Math.trunc(port) : 587,
     smtpUser: String(row.smtp_user ?? ''),
@@ -124,8 +130,8 @@ export async function saveNotifyChannelSettings(input: {
   await qRun(`UPDATE notification_channels
        SET mail_enabled = ?, slack_enabled = ?, smtp_host = ?, smtp_port = ?,
            smtp_user = ?, smtp_pass = ?, smtp_from = ?, slack_webhook_url = ?, updated_at = ?
-       WHERE id = 1`, [input.mailEnabled ? 1 : 0,
-      input.slackEnabled ? 1 : 0,
+       WHERE id = 1`, [input.mailEnabled,
+      input.slackEnabled,
       smtpHost,
       smtpPort,
       smtpUser,

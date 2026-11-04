@@ -1,5 +1,10 @@
-# Quetzal desk — Postgres 16 (schema quetzal) + Next app
-# Host port 5433 avoids clashing with a local Postgres on :5432.
+# Quetzal desk — production-oriented Compose stack
+# Postgres 16 + app + Mailpit (SMTP) + automation cron
+#
+#   cp .env.example .env   # set secrets
+#   docker compose up --build -d
+#   curl -fsS http://127.0.0.1:3210/api/health
+#
 services:
   db:
     image: postgres:16-alpine
@@ -12,7 +17,6 @@ services:
       - "127.0.0.1:${QUETZAL_PG_PORT:-5433}:5432"
     volumes:
       - quetzal_pg:/var/lib/postgresql/data
-      # Creates schema `quetzal` on first boot; QZ-PG-1 migrations mount optionally.
       - ./db/docker-init:/docker-entrypoint-initdb.d:ro
       - ./db/migrations:/migrations:ro
     healthcheck:
@@ -22,26 +26,55 @@ services:
       retries: 12
     restart: unless-stopped
 
+  migrate:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${QUETZAL_PG_PASSWORD:-quetzal}
+    volumes:
+      - ./db/migrations:/migrations:ro
+      - ./db/seed.sql:/seed.sql:ro
+      - ./scripts/docker-migrate.sh:/migrate.sh:ro
+    entrypoint: ["/bin/sh", "/migrate.sh"]
+    restart: "no"
+
+  mail:
+    image: axllent/mailpit:v1.22
+    ports:
+      - "127.0.0.1:${QUETZAL_MAILPIT_UI_PORT:-8025}:8025"
+      - "127.0.0.1:${QUETZAL_MAILPIT_SMTP_PORT:-1025}:1025"
+    restart: unless-stopped
+
   app:
     build: .
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      mail:
+        condition: service_started
     environment:
-      # search_path is also set in lib/pg.ts; options reinforce it for ad-hoc clients.
       QUETZAL_DATABASE_URL: postgresql://quetzal:${QUETZAL_PG_PASSWORD:-quetzal}@db:5432/quetzal
       NODE_ENV: production
       PORT: "3210"
       HOSTNAME: 0.0.0.0
       TZ: ${TZ:-UTC}
+      # Never enable demo/quick login in this stack (production + unset flags).
+      QUETZAL_DEMO_AUTH: "0"
+      QUETZAL_QUICK_LOGIN: "0"
+      QUETZAL_SEED_PASSWORDS: ${QUETZAL_SEED_PASSWORDS:-1}
       QUETZAL_BASE_URL: ${QUETZAL_BASE_URL:-http://127.0.0.1:3210}
-      QUETZAL_AUTOMATION_CRON_SECRET: ${QUETZAL_AUTOMATION_CRON_SECRET:-}
+      QUETZAL_AUTOMATION_CRON_SECRET: ${QUETZAL_AUTOMATION_CRON_SECRET:?set QUETZAL_AUTOMATION_CRON_SECRET in .env}
       QUETZAL_GITHUB_TOKEN: ${QUETZAL_GITHUB_TOKEN:-}
-      QUETZAL_SMTP_HOST: ${QUETZAL_SMTP_HOST:-}
-      QUETZAL_SMTP_PORT: ${QUETZAL_SMTP_PORT:-587}
+      # Default SMTP → Mailpit (swap for provider SMTP in real deploys)
+      QUETZAL_SMTP_HOST: ${QUETZAL_SMTP_HOST:-mail}
+      QUETZAL_SMTP_PORT: ${QUETZAL_SMTP_PORT:-1025}
       QUETZAL_SMTP_USER: ${QUETZAL_SMTP_USER:-}
       QUETZAL_SMTP_PASS: ${QUETZAL_SMTP_PASS:-}
-      QUETZAL_SMTP_FROM: ${QUETZAL_SMTP_FROM:-}
+      QUETZAL_SMTP_FROM: ${QUETZAL_SMTP_FROM:-quetzal@localhost}
       QUETZAL_SLACK_WEBHOOK: ${QUETZAL_SLACK_WEBHOOK:-}
     ports:
       - "127.0.0.1:${QUETZAL_APP_PORT:-3210}:3210"
@@ -56,7 +89,29 @@ services:
       interval: 15s
       timeout: 5s
       retries: 8
-      start_period: 40s
+      start_period: 60s
+    restart: unless-stopped
+
+  cron:
+    image: curlimages/curl:8.11.1
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      QUETZAL_AUTOMATION_CRON_SECRET: ${QUETZAL_AUTOMATION_CRON_SECRET:?set QUETZAL_AUTOMATION_CRON_SECRET in .env}
+      TICK_URL: http://app:3210/api/automation/tick
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "[cron] helpdesk/due tick every 15m → $$TICK_URL"
+        while true; do
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $$QUETZAL_AUTOMATION_CRON_SECRET" \
+            "$$TICK_URL" \
+            && echo " [ok $$(date -u +%H:%M:%SZ)]" \
+            || echo " [fail $$(date -u +%H:%M:%SZ)]"
+          sleep 900
+        done
     restart: unless-stopped
 
 volumes:

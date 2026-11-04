@@ -19,6 +19,7 @@ RUN if [ -f data/quetzal.build.db ] || [ -f data/quetzal.db ]; then \
       QUETZAL_SQLITE_PATH=/app/data/quetzal.build.db npx --yes tsx scripts/bootstrap-build-db.ts; \
     fi
 ENV QUETZAL_SQLITE_PATH=/app/data/quetzal.build.db
+ENV DOCKER_BUILD=1
 RUN npm run build
 
 FROM node:22-alpine AS runner

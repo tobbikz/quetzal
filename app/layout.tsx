@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono } from 'next/font/google';
+import { GeistMono } from 'geist/font/mono';
 import { AppShell } from '@/components/AppShell';
 import {
   ensurePersonalSpace,
@@ -17,11 +17,8 @@ import { currentProject, currentSite, currentUser } from '@/lib/session';
 import { listSitesForUser } from '@/lib/sites';
 import './globals.css';
 
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-  weight: ['400', '500', '600', '700'],
-});
+/** Local Geist Mono (no Google Fonts fetch — required for offline/Docker builds). */
+const mono = GeistMono;
 
 export const metadata: Metadata = {
   title: 'Quetzal',
