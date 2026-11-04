@@ -185,3 +185,84 @@ export async function submitCsat(
   );
   return getCsatByToken(token);
 }
+
+export type CsatReportRow = {
+  ticketKey: string;
+  summary: string;
+  score: number;
+  comment: string;
+  submittedAt: string;
+};
+
+export type CsatReport = {
+  submitted: number;
+  pending: number;
+  average: number | null;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>;
+  recent: CsatReportRow[];
+};
+
+export async function getCsatReport(siteId?: number): Promise<CsatReport> {
+  await ensureHelpdeskExtras();
+  const siteClause =
+    typeof siteId === 'number' ? 'AND (t.site_id IS NULL OR t.site_id = ?)' : '';
+  const params: number[] = typeof siteId === 'number' ? [siteId] : [];
+
+  const counts = (await qGet(
+    `SELECT
+       COUNT(*) FILTER (WHERE c.submitted_at IS NOT NULL)::int AS submitted,
+       COUNT(*) FILTER (WHERE c.submitted_at IS NULL)::int AS pending,
+       AVG(c.score) FILTER (WHERE c.submitted_at IS NOT NULL) AS average
+     FROM helpdesk_csat c
+     INNER JOIN helpdesk_tickets t ON t.id = c.ticket_id
+     WHERE 1=1 ${siteClause}`,
+    params,
+  )) as { submitted: number; pending: number; average: number | string | null };
+
+  const distRows = (await qAll(
+    `SELECT c.score::int AS score, COUNT(*)::int AS n
+     FROM helpdesk_csat c
+     INNER JOIN helpdesk_tickets t ON t.id = c.ticket_id
+     WHERE c.submitted_at IS NOT NULL ${siteClause}
+     GROUP BY c.score`,
+    params,
+  )) as { score: number; n: number }[];
+
+  const distribution: CsatReport['distribution'] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const row of distRows) {
+    const s = Number(row.score) as 1 | 2 | 3 | 4 | 5;
+    if (s >= 1 && s <= 5) distribution[s] = Number(row.n);
+  }
+
+  const recent = (
+    (await qAll(
+      `SELECT t.key, t.summary, c.score, c.comment, c.submitted_at
+       FROM helpdesk_csat c
+       INNER JOIN helpdesk_tickets t ON t.id = c.ticket_id
+       WHERE c.submitted_at IS NOT NULL ${siteClause}
+       ORDER BY c.submitted_at DESC
+       LIMIT 40`,
+      params,
+    )) as Record<string, unknown>[]
+  ).map((row) => ({
+    ticketKey: String(row.key),
+    summary: String(row.summary ?? ''),
+    score: Number(row.score),
+    comment: String(row.comment ?? ''),
+    submittedAt: String(row.submitted_at),
+  }));
+
+  const avgRaw = counts.average;
+  const average =
+    avgRaw == null || avgRaw === ''
+      ? null
+      : Math.round(Number(avgRaw) * 10) / 10;
+
+  return {
+    submitted: Number(counts.submitted ?? 0),
+    pending: Number(counts.pending ?? 0),
+    average,
+    distribution,
+    recent,
+  };
+}

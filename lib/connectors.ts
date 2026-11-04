@@ -4,6 +4,7 @@ import { qGet, qRun } from '@/lib/sql';
 export type IntegrationConnectors = {
   githubWebhookSecret: string;
   githubEnabled: boolean;
+  githubDefaultProject: string;
   teamsWebhookUrl: string;
   teamsEnabled: boolean;
   emailInboundToken: string;
@@ -28,12 +29,16 @@ export async function ensureConnectors(): Promise<void> {
         id INTEGER PRIMARY KEY CHECK (id = 1),
         github_webhook_secret TEXT NOT NULL DEFAULT '',
         github_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+        github_default_project TEXT NOT NULL DEFAULT 'OPS',
         teams_webhook_url TEXT NOT NULL DEFAULT '',
         teams_enabled BOOLEAN NOT NULL DEFAULT FALSE,
         email_inbound_token TEXT NOT NULL DEFAULT '',
         email_inbound_enabled BOOLEAN NOT NULL DEFAULT FALSE,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )`);
+      await qRun(
+        `ALTER TABLE integration_connectors ADD COLUMN IF NOT EXISTS github_default_project TEXT NOT NULL DEFAULT 'OPS'`,
+      );
       const existing = await qGet<{ id: number }>('SELECT id FROM integration_connectors WHERE id = 1');
       if (!existing) {
         await qRun(
@@ -53,6 +58,7 @@ function mapRow(row: Record<string, unknown>): IntegrationConnectors {
   return {
     githubWebhookSecret: String(row.github_webhook_secret ?? ''),
     githubEnabled: asBool(row.github_enabled),
+    githubDefaultProject: String(row.github_default_project ?? 'OPS').trim().toUpperCase() || 'OPS',
     teamsWebhookUrl: String(row.teams_webhook_url ?? ''),
     teamsEnabled: asBool(row.teams_enabled),
     emailInboundToken: String(row.email_inbound_token ?? ''),
@@ -70,6 +76,7 @@ export async function getConnectors(): Promise<IntegrationConnectors> {
     return {
       githubWebhookSecret: '',
       githubEnabled: false,
+      githubDefaultProject: 'OPS',
       teamsWebhookUrl: '',
       teamsEnabled: false,
       emailInboundToken: '',
@@ -84,6 +91,7 @@ export async function saveConnectors(input: {
   githubEnabled: boolean;
   githubWebhookSecret?: string;
   updateGithubSecret?: boolean;
+  githubDefaultProject?: string;
   teamsEnabled: boolean;
   teamsWebhookUrl: string;
   emailInboundEnabled: boolean;
@@ -98,9 +106,15 @@ export async function saveConnectors(input: {
   const emailInboundToken = input.rotateEmailToken
     ? randomBytes(18).toString('hex')
     : current.emailInboundToken || randomBytes(18).toString('hex');
+  const githubDefaultProject = (
+    input.githubDefaultProject ?? current.githubDefaultProject ?? 'OPS'
+  )
+    .trim()
+    .toUpperCase()
+    .slice(0, 20) || 'OPS';
   await qRun(
     `UPDATE integration_connectors SET
-       github_enabled = ?, github_webhook_secret = ?,
+       github_enabled = ?, github_webhook_secret = ?, github_default_project = ?,
        teams_enabled = ?, teams_webhook_url = ?,
        email_inbound_enabled = ?, email_inbound_token = ?,
        updated_at = ?
@@ -108,6 +122,7 @@ export async function saveConnectors(input: {
     [
       input.githubEnabled,
       githubWebhookSecret,
+      githubDefaultProject,
       input.teamsEnabled,
       input.teamsWebhookUrl.trim().slice(0, 2000),
       input.emailInboundEnabled,

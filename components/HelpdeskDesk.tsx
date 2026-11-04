@@ -18,6 +18,7 @@ const SECTION_LINKS = [
   { href: '/helpdesk/queues', label: 'Board', match: 'queues' as const },
   { href: '/helpdesk/sla', label: 'SLA', match: 'sla' as const },
   { href: '/helpdesk/macros', label: 'Macros', match: 'macros' as const },
+  { href: '/helpdesk/csat', label: 'CSAT', match: 'csat' as const },
 ];
 
 export function HelpdeskDesk({
@@ -29,7 +30,7 @@ export function HelpdeskDesk({
   children,
 }: {
   crumbs: HelpdeskCrumb[];
-  activeSection: 'tickets' | 'queues' | 'sla' | 'detail' | 'macros';
+  activeSection: 'tickets' | 'queues' | 'sla' | 'detail' | 'macros' | 'csat';
   activeQueue?: HelpdeskQueueKey | string;
   counts: HelpdeskQueueCounts;
   canCreate?: boolean;

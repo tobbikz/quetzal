@@ -177,12 +177,23 @@ export default async function IntegrationsSettingsPage({
                 value="1"
                 defaultChecked={connectors.githubEnabled}
               />
-              <span>Enable GitHub webhook receiver</span>
+              <span>Enable GitHub → Work sync</span>
             </label>
             <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
               POST to <code>/api/integrations/github</code> with{' '}
-              <code>X-Hub-Signature-256</code> when a secret is set.
+              <code>X-Hub-Signature-256</code> when a secret is set. Opens/closes issues &amp; PRs
+              and mirrors comments into the default project.
             </p>
+            <label className="field">
+              <span>Default project key</span>
+              <input
+                type="text"
+                name="github_default_project"
+                defaultValue={connectors.githubDefaultProject}
+                placeholder="OPS"
+                autoComplete="off"
+              />
+            </label>
             <label className="field">
               <span>GitHub webhook secret (leave blank to keep)</span>
               <input

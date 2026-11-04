@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getConnectors } from '@/lib/connectors';
+import { processGithubWebhook } from '@/lib/githubSync';
 
 export const runtime = 'nodejs';
 
@@ -17,8 +18,8 @@ function verifySignature(secret: string, rawBody: string, header: string | null)
 }
 
 /**
- * GitHub webhook receiver stub — verifies signature when secret is set,
- * acknowledges delivery. Payload routing to Quetzal issues is a follow-up.
+ * GitHub webhook receiver — verifies signature when secret is set,
+ * then syncs issues / PRs / comments into Quetzal Work.
  */
 export async function POST(request: Request) {
   const connectors = await getConnectors();
@@ -34,23 +35,31 @@ export async function POST(request: Request) {
     }
   }
 
-  let event = request.headers.get('x-github-event') ?? 'unknown';
-  let delivery = request.headers.get('x-github-delivery') ?? '';
-  let action: string | undefined;
+  const event = request.headers.get('x-github-event') ?? 'unknown';
+  const delivery = request.headers.get('x-github-delivery') ?? '';
+
+  let payload: Record<string, unknown>;
   try {
-    const parsed = JSON.parse(raw) as { action?: string };
-    action = parsed.action;
+    payload = JSON.parse(raw) as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 });
   }
 
-  console.log('[github-webhook]', { event, delivery, action });
-  return NextResponse.json({
-    ok: true,
-    received: true,
-    event,
-    delivery,
-    action: action ?? null,
-    note: 'Acknowledged — issue/PR sync not wired yet',
-  });
+  try {
+    const result = await processGithubWebhook(event, payload);
+    console.log('[github-webhook]', { event, delivery, action: payload.action, result });
+    return NextResponse.json({
+      ok: true,
+      received: true,
+      event,
+      delivery,
+      sync: result,
+    });
+  } catch (err) {
+    console.error('[github-webhook] sync failed', err);
+    return NextResponse.json(
+      { error: 'sync failed', detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 },
+    );
+  }
 }

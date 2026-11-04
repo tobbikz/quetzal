@@ -104,6 +104,7 @@ export async function saveConnectorsAction(formData: FormData): Promise<void> {
     githubEnabled,
     githubWebhookSecret: githubSecret || undefined,
     updateGithubSecret: githubSecret.length > 0 || formData.get('clear_github_secret') === '1',
+    githubDefaultProject: text(formData.get('github_default_project'), 20),
     teamsEnabled,
     teamsWebhookUrl: text(formData.get('teams_webhook_url'), 2000),
     emailInboundEnabled,

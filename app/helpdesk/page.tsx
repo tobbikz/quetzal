@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { applyHelpdeskFilters } from '@/app/helpdesk/actions';
+import { applyHelpdeskFilters, claimHelpdeskTicketAction } from '@/app/helpdesk/actions';
 import { OpenHelpdeskFromQuery } from '@/components/CreateHelpdesk';
 import { HelpdeskDesk } from '@/components/HelpdeskDesk';
 import { PriorityMark } from '@/components/PriorityMark';
@@ -173,6 +173,7 @@ export default async function HelpdeskPage({
             <th>Requester</th>
             <th>Assignee</th>
             <th>Updated</th>
+            {canWrite ? <th /> : null}
           </tr>
         </thead>
         <tbody>
@@ -231,12 +232,24 @@ export default async function HelpdeskPage({
                   )}
                 </td>
                 <td className="muted">{formatWhen(ticket.updatedAt)}</td>
+                {canWrite ? (
+                  <td>
+                    {!ticket.assigneeId ? (
+                      <form action={claimHelpdeskTicketAction}>
+                        <input type="hidden" name="key" value={ticket.key} />
+                        <button type="submit" className="btn-secondary">
+                          Claim
+                        </button>
+                      </form>
+                    ) : null}
+                  </td>
+                ) : null}
               </tr>
             );
           })}
           {tickets.length === 0 && (
             <tr>
-              <td colSpan={9} className="muted">
+              <td colSpan={canWrite ? 10 : 9} className="muted">
                 No tickets match this view.
               </td>
             </tr>

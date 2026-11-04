@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { LoginForm } from '@/components/LoginForm';
-import { quickLoginAllowed } from '@/lib/auth';
+import { authDevEscapesEnabled, quickLoginAllowed } from '@/lib/auth';
 import { ensureSeedLocalPasswords, listUsers } from '@/lib/db';
 import { isSsoEnabled } from '@/lib/sso';
 
@@ -14,6 +14,7 @@ export default async function LoginPage({
   const people = await listUsers();
   const next = params.next?.startsWith('/') && !params.next.startsWith('//') ? params.next : undefined;
   const ssoEnabled = await isSsoEnabled();
+  const devEscapes = authDevEscapesEnabled();
 
   return (
     <div className="login-page">
@@ -26,6 +27,11 @@ export default async function LoginPage({
         </header>
 
         <div className="login-card">
+          {devEscapes ? (
+            <p className="muted" style={{ marginBottom: '0.75rem', color: 'var(--danger, #b91c1c)' }}>
+              Dev auth escapes are on (demo/quick login). Never enable these in production.
+            </p>
+          ) : null}
           <LoginForm
             people={people}
             next={next}

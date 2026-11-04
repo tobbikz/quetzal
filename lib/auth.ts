@@ -59,11 +59,11 @@ export async function authenticatePassword(
     }
   }
 
-  // Escape hatch while hashes are being seeded.
+  // Escape hatch while hashes are being seeded — never in production.
   if (
     existing &&
     !existing.passwordHash &&
-    process.env.QUETZAL_DEMO_AUTH === '1' &&
+    demoAuthAllowed() &&
     password.length > 0
   ) {
     return { ok: true, user: toUser(existing), via: 'local' };
@@ -71,6 +71,17 @@ export async function authenticatePassword(
   return { ok: false, reason: 'invalid' };
 }
 
+/** True only when NODE_ENV is not production and env flag is explicitly 1. */
+export function demoAuthAllowed(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
+  return process.env.QUETZAL_DEMO_AUTH === '1';
+}
+
 export function quickLoginAllowed(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
   return process.env.QUETZAL_QUICK_LOGIN === '1';
+}
+
+export function authDevEscapesEnabled(): boolean {
+  return demoAuthAllowed() || quickLoginAllowed();
 }

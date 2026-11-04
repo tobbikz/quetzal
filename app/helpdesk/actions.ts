@@ -135,3 +135,18 @@ export async function deleteMacroAction(formData: FormData): Promise<void> {
   revalidatePath('/helpdesk/macros');
   redirect('/helpdesk/macros');
 }
+
+/** Assign the current agent to an unassigned ticket from the queue list. */
+export async function claimHelpdeskTicketAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  assertCanWriteIssues(user);
+  const key = text(formData.get('key'), 20).toUpperCase();
+  const ticket = await requireTicketOnCurrentSite(key);
+  if (!ticket) redirect('/helpdesk');
+  if (ticket.assigneeId == null) {
+    await assignHelpdeskTicket(key, user.id);
+  }
+  revalidatePath('/helpdesk');
+  revalidatePath(`/helpdesk/${key}`);
+  redirect(`/helpdesk/${key}`);
+}
