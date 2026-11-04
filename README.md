@@ -2,6 +2,8 @@
 
 Open-source **work · wiki · helpdesk** desk for a small company. Apache 2.0.
 
+**Public repo:** [github.com/tobbikz/quetzal](https://github.com/tobbikz/quetzal)
+
 Not Atlassian, and **not** the Hacienda / facturación “Quetzal FE” product. This repo is the daily ops desk: Portal, Work, Board, Filters (QQL), Calendar, Roadmap, Releases, Dashboards, Wiki, Helpdesk, Automation, Settings (SSO + Integrations).
 
 ## Work
