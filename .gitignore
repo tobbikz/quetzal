@@ -21,3 +21,4 @@ quetzal-strip-*.jpg
 ref-*.png
 roadmap-concepts-*.png
 assets-after/
+.env
