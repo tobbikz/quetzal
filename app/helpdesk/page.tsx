@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { applyHelpdeskFilters, claimHelpdeskTicketAction } from '@/app/helpdesk/actions';
-import { OpenHelpdeskFromQuery } from '@/components/CreateHelpdesk';
+import { NewHelpdeskButton, OpenHelpdeskFromQuery } from '@/components/CreateHelpdesk';
 import { HelpdeskDesk } from '@/components/HelpdeskDesk';
 import { PriorityMark } from '@/components/PriorityMark';
 import { redirect } from 'next/navigation';
@@ -250,7 +250,14 @@ export default async function HelpdeskPage({
           {tickets.length === 0 && (
             <tr>
               <td colSpan={canWrite ? 10 : 9} className="muted">
-                No tickets match this view.
+                {counts.all === 0 ? (
+                  <div className="row-actions">
+                    <span>No tickets yet. Create the first ticket to get started.</span>
+                    {canWrite ? <NewHelpdeskButton label="Create ticket" /> : null}
+                  </div>
+                ) : (
+                  'No tickets match this view.'
+                )}
               </td>
             </tr>
           )}
