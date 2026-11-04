@@ -3,9 +3,11 @@ import { redirect } from 'next/navigation';
 import {
   createWebhookAction,
   deleteWebhookAction,
+  saveConnectorsAction,
   saveSlackConnectorAction,
   toggleWebhookAction,
 } from '@/app/settings/integrations/actions';
+import { getConnectors } from '@/lib/connectors';
 import { getEffectiveNotifyConfig, getNotifyChannelSettings } from '@/lib/notify';
 import { currentUser } from '@/lib/session';
 import { listWebhooks, WEBHOOK_EVENTS } from '@/lib/webhooks';
@@ -13,6 +15,10 @@ import { listWebhooks, WEBHOOK_EVENTS } from '@/lib/webhooks';
 const EVENT_LABEL: Record<(typeof WEBHOOK_EVENTS)[number], string> = {
   'issue.status_changed': 'Issue status changed',
   'issue.comment_added': 'Issue comment added',
+  'helpdesk.created': 'Helpdesk ticket created',
+  'helpdesk.status_changed': 'Helpdesk status changed',
+  'helpdesk.note_added': 'Helpdesk note added',
+  'helpdesk.csat_submitted': 'Helpdesk CSAT submitted',
 };
 
 export default async function IntegrationsSettingsPage({
@@ -24,10 +30,11 @@ export default async function IntegrationsSettingsPage({
   if (user.role !== 'admin') redirect('/');
 
   const params = await searchParams;
-  const [hooks, settings, effective] = await Promise.all([
+  const [hooks, settings, effective, connectors] = await Promise.all([
     listWebhooks(),
     getNotifyChannelSettings(),
     getEffectiveNotifyConfig(),
+    getConnectors(),
   ]);
 
   return (
@@ -48,7 +55,7 @@ export default async function IntegrationsSettingsPage({
           <div>
             <h1 className="page-title">Integrations</h1>
             <p className="page-sub">
-              Outbound webhooks and first connectors. SMTP details stay under{' '}
+              Outbound webhooks and connectors. SMTP details stay under{' '}
               <Link href="/settings/notifications">Notifications</Link>.
             </p>
           </div>
@@ -64,6 +71,11 @@ export default async function IntegrationsSettingsPage({
             Slack connector saved.
           </p>
         ) : null}
+        {params.saved === 'connectors' ? (
+          <p className="muted" style={{ marginBottom: '0.75rem' }}>
+            Connectors saved.
+          </p>
+        ) : null}
         {params.error === 'webhook' ? (
           <p className="muted" style={{ marginBottom: '0.75rem', color: 'var(--danger, #b91c1c)' }}>
             Could not create webhook — URL must be http(s).
@@ -71,7 +83,7 @@ export default async function IntegrationsSettingsPage({
         ) : null}
 
         <section className="panel" style={{ marginBottom: '1rem' }}>
-          <div className="panel-head">Connectors</div>
+          <div className="panel-head">Status</div>
           <div className="panel-body stack">
             <div className="row-actions" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
               <span className={effective.slackReady ? 'tag tag--ok' : 'tag tag--muted'}>
@@ -81,6 +93,15 @@ export default async function IntegrationsSettingsPage({
               <span className={effective.mailReady ? 'tag tag--ok' : 'tag tag--muted'}>
                 Email {effective.mailReady ? 'ready' : 'not ready'}
                 {effective.smtpFromEnv ? ' · env' : ''}
+              </span>
+              <span className={connectors.teamsEnabled ? 'tag tag--ok' : 'tag tag--muted'}>
+                Teams {connectors.teamsEnabled ? 'on' : 'off'}
+              </span>
+              <span className={connectors.githubEnabled ? 'tag tag--ok' : 'tag tag--muted'}>
+                GitHub {connectors.githubEnabled ? 'on' : 'off'}
+              </span>
+              <span className={connectors.emailInboundEnabled ? 'tag tag--ok' : 'tag tag--muted'}>
+                Inbound mail {connectors.emailInboundEnabled ? 'on' : 'off'}
               </span>
               <span className="tag tag--info">Webhooks {hooks.length}</span>
             </div>
@@ -125,10 +146,95 @@ export default async function IntegrationsSettingsPage({
         </section>
 
         <section className="panel" style={{ marginBottom: '1rem' }}>
+          <div className="panel-head">Teams · GitHub · Email inbound</div>
+          <form className="panel-body stack" action={saveConnectorsAction}>
+            <label className="field field--check">
+              <input
+                type="checkbox"
+                name="teams_enabled"
+                value="1"
+                defaultChecked={connectors.teamsEnabled}
+              />
+              <span>Enable Microsoft Teams incoming webhook</span>
+            </label>
+            <label className="field">
+              <span>Teams webhook URL</span>
+              <input
+                type="url"
+                name="teams_webhook_url"
+                defaultValue={connectors.teamsWebhookUrl}
+                placeholder="https://…webhook.office.com/…"
+                autoComplete="off"
+              />
+            </label>
+
+            <hr style={{ border: 0, borderTop: '1px solid var(--border, #ddd)', margin: '0.5rem 0' }} />
+
+            <label className="field field--check">
+              <input
+                type="checkbox"
+                name="github_enabled"
+                value="1"
+                defaultChecked={connectors.githubEnabled}
+              />
+              <span>Enable GitHub webhook receiver</span>
+            </label>
+            <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
+              POST to <code>/api/integrations/github</code> with{' '}
+              <code>X-Hub-Signature-256</code> when a secret is set.
+            </p>
+            <label className="field">
+              <span>GitHub webhook secret (leave blank to keep)</span>
+              <input
+                type="password"
+                name="github_webhook_secret"
+                placeholder={connectors.githubWebhookSecret ? '••••••••' : 'optional'}
+                autoComplete="off"
+              />
+            </label>
+
+            <hr style={{ border: 0, borderTop: '1px solid var(--border, #ddd)', margin: '0.5rem 0' }} />
+
+            <label className="field field--check">
+              <input
+                type="checkbox"
+                name="email_inbound_enabled"
+                value="1"
+                defaultChecked={connectors.emailInboundEnabled}
+              />
+              <span>Enable email → helpdesk inbound API</span>
+            </label>
+            <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
+              POST JSON to <code>/api/helpdesk/email-inbound</code> with Bearer token. Creates an HD
+              ticket from <code>from</code> / <code>subject</code> / <code>text</code>.
+            </p>
+            <label className="field">
+              <span>Inbound token</span>
+              <input
+                type="text"
+                readOnly
+                value={connectors.emailInboundToken || '(generate on save)'}
+                autoComplete="off"
+              />
+            </label>
+            <label className="field field--check">
+              <input type="checkbox" name="rotate_email_token" value="1" />
+              <span>Rotate inbound token on save</span>
+            </label>
+
+            <div className="row-actions">
+              <button type="submit" className="btn">
+                Save connectors
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section className="panel" style={{ marginBottom: '1rem' }}>
           <div className="panel-head">Outbound webhooks</div>
           <div className="panel-body stack">
             <p className="muted" style={{ margin: 0 }}>
-              Signed JSON POSTs when issues change. Header{' '}
+              Signed JSON POSTs when work or helpdesk changes. Header{' '}
               <code>x-quetzal-signature: sha256=…</code> when a secret is set.
             </p>
 

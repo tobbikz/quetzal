@@ -28,8 +28,10 @@ Not Atlassian, and **not** the Hacienda / facturación “Quetzal FE” product.
 
 ## Integrations & auth
 
-- Settings → Integrations: outbound issue webhooks + Slack Incoming Webhook
+- Settings → Integrations: outbound issue/helpdesk webhooks, Slack, Teams, GitHub receiver, email inbound
+- Helpdesk: macros, CSAT (`/csat/<token>`), email inbound API
 - Settings → LDAP: directory bind + JIT local mirror users
+- Ops notes: `docs/ops-auth-integrations.md`
 - Notifications: SMTP + Slack (`QUETZAL_SMTP_*`, `QUETZAL_SLACK_WEBHOOK`)
 - SSO: SAML ACS + OIDC
 - Admin → Users: create local accounts, reset passwords, disable users

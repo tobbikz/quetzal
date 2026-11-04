@@ -1,11 +1,16 @@
 import { createHmac } from 'node:crypto';
-import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Issue } from '@/lib/types';
+import type { HelpdeskTicket } from '@/lib/helpdesk';
 import { qAll, qGet, qRun, qInsertReturningId } from './sql';
 
-
-export const WEBHOOK_EVENTS = ['issue.status_changed', 'issue.comment_added'] as const;
+export const WEBHOOK_EVENTS = [
+  'issue.status_changed',
+  'issue.comment_added',
+  'helpdesk.created',
+  'helpdesk.status_changed',
+  'helpdesk.note_added',
+  'helpdesk.csat_submitted',
+] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
 export interface Webhook {
@@ -20,7 +25,7 @@ export interface Webhook {
 export type WebhookPayload = {
   event: WebhookEvent;
   at: string;
-  issue: {
+  issue?: {
     id: number;
     key: string;
     projectKey: string;
@@ -31,9 +36,21 @@ export type WebhookPayload = {
     assigneeId: number | null;
     reporterId: number;
   };
-  fromStatus?: Issue['status'] | null;
-  toStatus?: Issue['status'] | null;
+  helpdesk?: {
+    id: number;
+    key: string;
+    summary: string;
+    status: string;
+    priority: string;
+    type: string;
+    assigneeId: number | null;
+    requesterId: number;
+  };
+  fromStatus?: string | null;
+  toStatus?: string | null;
   comment?: { body: string; authorId: number } | null;
+  note?: { body: string; authorId: number } | null;
+  csat?: { score: number; comment: string } | null;
   authorId?: number | null;
 };
 
@@ -59,7 +76,7 @@ function parseEvents(raw: unknown): WebhookEvent[] {
         );
     }
   }
-  return [...WEBHOOK_EVENTS];
+  return ['issue.status_changed', 'issue.comment_added'];
 }
 
 function mapWebhook(row: Record<string, unknown>): Webhook {
@@ -101,7 +118,7 @@ export async function ensureWebhooksTable(): Promise<void> {
 
 export async function listWebhooks(): Promise<Webhook[]> {
   await ensureWebhooksTable();
-  return (await qAll(`SELECT * FROM webhooks ORDER BY id`) as Record<string, unknown>[]).map(
+  return ((await qAll(`SELECT * FROM webhooks ORDER BY id`)) as Record<string, unknown>[]).map(
     mapWebhook,
   );
 }
@@ -121,9 +138,12 @@ export async function createWebhook(input: {
   if (!/^https?:\/\//i.test(url)) throw new Error('url must be http(s)');
   const events = input.events?.length ? input.events : [...WEBHOOK_EVENTS];
   const enabled = input.enabled !== false;
-  const id = await qInsertReturningId(`INSERT INTO webhooks (url, secret, events, enabled, created_at)
-       VALUES (?, ?, ?::jsonb, ?, ?)`, [url, (input.secret ?? '').trim(), JSON.stringify(events), enabled, stamp()]);
-  const row = await qGet(`SELECT * FROM webhooks WHERE id = ?`, [id]) as
+  const id = await qInsertReturningId(
+    `INSERT INTO webhooks (url, secret, events, enabled, created_at)
+       VALUES (?, ?, ?::jsonb, ?, ?)`,
+    [url, (input.secret ?? '').trim(), JSON.stringify(events), enabled, stamp()],
+  );
+  const row = (await qGet(`SELECT * FROM webhooks WHERE id = ?`, [id])) as
     | Record<string, unknown>
     | undefined;
   if (!row) throw new Error('webhook insert failed');
@@ -142,7 +162,7 @@ export async function deleteWebhook(id: number): Promise<boolean> {
   return result > 0;
 }
 
-function issueSlice(issue: Issue): WebhookPayload['issue'] {
+function issueSlice(issue: Issue): NonNullable<WebhookPayload['issue']> {
   return {
     id: issue.id,
     key: issue.key,
@@ -153,6 +173,19 @@ function issueSlice(issue: Issue): WebhookPayload['issue'] {
     type: issue.type,
     assigneeId: issue.assigneeId,
     reporterId: issue.reporterId,
+  };
+}
+
+function helpdeskSlice(ticket: HelpdeskTicket): NonNullable<WebhookPayload['helpdesk']> {
+  return {
+    id: ticket.id,
+    key: ticket.key,
+    summary: ticket.summary,
+    status: ticket.status,
+    priority: String(ticket.priority ?? 'medium'),
+    type: ticket.type,
+    assigneeId: ticket.assigneeId,
+    requesterId: ticket.requesterId,
   };
 }
 
@@ -178,7 +211,9 @@ async function deliver(hook: Webhook, payload: WebhookPayload): Promise<void> {
 }
 
 /** Fire matching webhooks (async, non-blocking for callers). */
-export async function fireWebhooks(payload: Omit<WebhookPayload, 'at'> & { at?: string }): Promise<void> {
+export async function fireWebhooks(
+  payload: Omit<WebhookPayload, 'at'> & { at?: string },
+): Promise<void> {
   const full: WebhookPayload = { ...payload, at: payload.at ?? stamp() };
   const hooks = await listEnabledWebhooksFor(full.event);
   if (!hooks.length) return;
@@ -221,5 +256,53 @@ export async function fireIssueCommentAdded(input: {
     issue: issueSlice(input.issue),
     comment: { body: input.body, authorId: input.authorId },
     authorId: input.authorId,
+  });
+}
+
+export async function fireHelpdeskCreated(ticket: HelpdeskTicket): Promise<void> {
+  await fireWebhooks({
+    event: 'helpdesk.created',
+    helpdesk: helpdeskSlice(ticket),
+    authorId: ticket.requesterId,
+  });
+}
+
+export async function fireHelpdeskStatusChanged(input: {
+  ticket: HelpdeskTicket;
+  fromStatus: string;
+  toStatus: string;
+  authorId?: number | null;
+}): Promise<void> {
+  await fireWebhooks({
+    event: 'helpdesk.status_changed',
+    helpdesk: helpdeskSlice(input.ticket),
+    fromStatus: input.fromStatus,
+    toStatus: input.toStatus,
+    authorId: input.authorId ?? null,
+  });
+}
+
+export async function fireHelpdeskNoteAdded(input: {
+  ticket: HelpdeskTicket;
+  authorId: number;
+  body: string;
+}): Promise<void> {
+  await fireWebhooks({
+    event: 'helpdesk.note_added',
+    helpdesk: helpdeskSlice(input.ticket),
+    note: { body: input.body, authorId: input.authorId },
+    authorId: input.authorId,
+  });
+}
+
+export async function fireHelpdeskCsatSubmitted(input: {
+  ticket: HelpdeskTicket;
+  score: number;
+  comment: string;
+}): Promise<void> {
+  await fireWebhooks({
+    event: 'helpdesk.csat_submitted',
+    helpdesk: helpdeskSlice(input.ticket),
+    csat: { score: input.score, comment: input.comment },
   });
 }

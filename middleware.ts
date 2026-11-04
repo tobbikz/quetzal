@@ -9,6 +9,8 @@ import { checkRateLimit } from '@/lib/rateLimit';
 
 const PORTAL_LIMIT = 120;
 const SSO_LIMIT = 30;
+const LOGIN_LIMIT = 40;
+const INBOUND_LIMIT = 60;
 const WINDOW_MS = 60_000;
 
 function clientIp(request: NextRequest): string {
@@ -19,7 +21,7 @@ function clientIp(request: NextRequest): string {
 
 function rateLimited(
   request: NextRequest,
-  bucket: 'portal' | 'sso',
+  bucket: 'portal' | 'sso' | 'login' | 'inbound',
   limit: number,
 ): NextResponse | null {
   const result = checkRateLimit(`${bucket}:${clientIp(request)}`, limit, WINDOW_MS);
@@ -39,9 +41,18 @@ export function middleware(request: NextRequest) {
   const authed = request.cookies.get('quetzal_auth')?.value === '1';
 
   if (pathname === '/login' || pathname.startsWith('/login/')) {
+    const blocked = rateLimited(request, 'login', LOGIN_LIMIT);
+    if (blocked) return blocked;
     if (authed) {
       return NextResponse.redirect(new URL('/', request.url));
     }
+    return NextResponse.next();
+  }
+
+  // Public CSAT survey (token in path).
+  if (pathname.startsWith('/csat/')) {
+    const blocked = rateLimited(request, 'portal', PORTAL_LIMIT);
+    if (blocked) return blocked;
     return NextResponse.next();
   }
 
@@ -59,6 +70,15 @@ export function middleware(request: NextRequest) {
 
   if (pathname.startsWith('/api/sso/')) {
     const blocked = rateLimited(request, 'sso', SSO_LIMIT);
+    if (blocked) return blocked;
+    return NextResponse.next();
+  }
+
+  if (
+    pathname === '/api/helpdesk/email-inbound' ||
+    pathname === '/api/integrations/github'
+  ) {
+    const blocked = rateLimited(request, 'inbound', INBOUND_LIMIT);
     if (blocked) return blocked;
     return NextResponse.next();
   }

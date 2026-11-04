@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { addHelpdeskNoteAction, updateHelpdeskStatusAction } from '@/app/helpdesk/actions';
+import {
+  addHelpdeskNoteAction,
+  applyMacroNoteAction,
+  updateHelpdeskStatusAction,
+} from '@/app/helpdesk/actions';
 import { HelpdeskDesk } from '@/components/HelpdeskDesk';
 import { PriorityMark } from '@/components/PriorityMark';
 import { WikiHtml } from '@/components/WikiHtml';
@@ -22,6 +26,7 @@ import {
   tagForSlaBadge,
   type HelpdeskQueueCounts,
 } from '@/lib/helpdesk';
+import { getCsatForTicket, listHelpdeskMacros } from '@/lib/helpdeskExtras';
 import { currentSite, currentUser } from '@/lib/session';
 import type { Priority } from '@/lib/types';
 import type { ReactNode } from 'react';
@@ -44,6 +49,8 @@ export default async function HelpdeskTicketPage({
   const nameOf = (id: number | null) =>
     (id ? people.find((person) => person.id === id)?.name : undefined) ?? 'Someone';
   const notes = await listHelpdeskNotes(ticket.id);
+  const macros = canEdit ? await listHelpdeskMacros() : [];
+  const csat = isAgent ? await getCsatForTicket(ticket.id) : undefined;
   const responseState = slaBadgeState('response', ticket);
   const resolveState = slaBadgeState('resolve', ticket);
   const counts: HelpdeskQueueCounts | null = isAgent
@@ -130,6 +137,27 @@ export default async function HelpdeskTicketPage({
                   </div>
                 </form>
               )}
+              {canEdit && macros.length > 0 ? (
+                <div className="stack" style={{ marginTop: '0.75rem' }}>
+                  <div className="muted" style={{ fontSize: '0.85rem' }}>
+                    Apply macro
+                  </div>
+                  <div className="row-actions" style={{ flexWrap: 'wrap' }}>
+                    {macros.map((macro) => (
+                      <form key={macro.id} action={applyMacroNoteAction}>
+                        <input type="hidden" name="key" value={ticket.key} />
+                        <input type="hidden" name="macro_id" value={macro.id} />
+                        <button type="submit" className="btn-secondary">
+                          {macro.name}
+                        </button>
+                      </form>
+                    ))}
+                    <Link className="btn-secondary" href="/helpdesk/macros">
+                      Manage…
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </section>
         </div>
@@ -235,6 +263,39 @@ export default async function HelpdeskTicketPage({
               </form>
             </section>
           )}
+          {isAgent ? (
+            <section className="panel">
+              <div className="panel-head">CSAT</div>
+              <div className="panel-body stack">
+                {!csat ? (
+                  <p className="muted" style={{ margin: 0 }}>
+                    Invite appears when the ticket is resolved or closed.
+                  </p>
+                ) : csat.submittedAt && csat.score != null ? (
+                  <>
+                    <div>
+                      <div className="muted">Score</div>
+                      <div>
+                        {csat.score}/5 · {formatWhen(csat.submittedAt)}
+                      </div>
+                    </div>
+                    {csat.comment ? (
+                      <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{csat.comment}</p>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <p className="muted" style={{ margin: 0 }}>
+                      Awaiting customer feedback.
+                    </p>
+                    <code style={{ fontSize: '0.75rem', wordBreak: 'break-all' }}>
+                      /csat/{csat.token}
+                    </code>
+                  </>
+                )}
+              </div>
+            </section>
+          ) : null}
         </aside>
       </div>
     </>

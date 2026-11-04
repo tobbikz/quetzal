@@ -14,6 +14,11 @@ import {
   type HelpdeskStatus,
   type HelpdeskType,
 } from '@/lib/helpdesk';
+import {
+  createHelpdeskMacro,
+  deleteHelpdeskMacro,
+  getHelpdeskMacro,
+} from '@/lib/helpdeskExtras';
 import { currentSite, requireUser } from '@/lib/session';
 
 async function requireTicketOnCurrentSite(key: string) {
@@ -94,4 +99,39 @@ export async function addHelpdeskNoteAction(formData: FormData): Promise<void> {
   revalidatePath(`/helpdesk/${key}`);
   revalidatePath('/helpdesk/sla');
   redirect(`/helpdesk/${key}`);
+}
+
+export async function applyMacroNoteAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  assertCanWriteIssues(user);
+  const key = text(formData.get('key'), 20).toUpperCase();
+  const ticket = await requireTicketOnCurrentSite(key);
+  if (!ticket) redirect('/helpdesk');
+  const macroId = Number(text(formData.get('macro_id'), 20));
+  const macro = Number.isInteger(macroId) ? await getHelpdeskMacro(macroId) : undefined;
+  if (!macro) redirect(`/helpdesk/${key}`);
+  await addHelpdeskNote(key, user.id, macro.body);
+  revalidatePath(`/helpdesk/${key}`);
+  redirect(`/helpdesk/${key}`);
+}
+
+export async function createMacroAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  assertCanWriteIssues(user);
+  await createHelpdeskMacro({
+    name: text(formData.get('name'), 80),
+    body: text(formData.get('body'), 4000),
+    createdBy: user.id,
+  });
+  revalidatePath('/helpdesk/macros');
+  redirect('/helpdesk/macros');
+}
+
+export async function deleteMacroAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  assertCanWriteIssues(user);
+  const id = Number(text(formData.get('id'), 20));
+  if (Number.isInteger(id) && id > 0) await deleteHelpdeskMacro(id);
+  revalidatePath('/helpdesk/macros');
+  redirect('/helpdesk/macros');
 }

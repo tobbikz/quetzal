@@ -488,6 +488,13 @@ export async function countHelpdeskQueues(
   };
 }
 
+export async function getHelpdeskTicketById(id: number): Promise<HelpdeskTicket | undefined> {
+  const row = (await qGet('SELECT * FROM helpdesk_tickets WHERE id = ?', [id])) as
+    | Record<string, unknown>
+    | undefined;
+  return row ? mapTicket(row) : undefined;
+}
+
 export async function getHelpdeskTicket(key: string): Promise<HelpdeskTicket | undefined> {
   const normalized = key.trim().toUpperCase();
   if (!normalized) return undefined;
@@ -535,8 +542,8 @@ export async function createHelpdeskTicket(input: {
       INSERT INTO helpdesk_tickets (
         key, num, type, status, priority, summary, body, labels, due,
         requester_id, assignee_id, created_at, updated_at,
-        response_due, resolve_due, response_met_at, resolve_met_at, sla_breached
-      ) VALUES (?, ?, ?, 'open', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
+        response_due, resolve_due, response_met_at, resolve_met_at, sla_breached, site_id
+      ) VALUES (?, ?, ?, 'open', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
     `, [key,
       next,
       type,
@@ -552,10 +559,19 @@ export async function createHelpdeskTicket(input: {
       dues.responseDue,
       dues.resolveDue,
       responseMetAt,
-      breached,]);
+      breached,
+      input.siteId ?? null,]);
   const ticket = await getHelpdeskTicket(key);
   if (!ticket) throw new Error(`Failed to create helpdesk ticket ${key}`);
   void result;
+  try {
+    const { fireHelpdeskCreated } = await import('@/lib/webhooks');
+    const { notifyOnHelpdeskEvent } = await import('@/lib/notify');
+    void fireHelpdeskCreated(ticket);
+    void notifyOnHelpdeskEvent({ kind: 'created', ticket });
+  } catch (err) {
+    console.error('[helpdesk] create side-effects', err);
+  }
   return ticket;
 }
 
@@ -564,6 +580,7 @@ export async function setHelpdeskStatus(key: string, status: HelpdeskStatus): Pr
   const ticket = await getHelpdeskTicket(key);
   if (!ticket) return undefined;
   if (ticket.status === status) return ticket;
+  const fromStatus = ticket.status;
   const at = stamp();
   await qRun('UPDATE helpdesk_tickets SET status = ?, updated_at = ? WHERE key = ?', [status,
     at,
@@ -572,10 +589,36 @@ export async function setHelpdeskStatus(key: string, status: HelpdeskStatus): Pr
   if (!refreshed) return undefined;
   if (status === 'resolved' || status === 'closed') {
     await markResolveMet(refreshed, at);
+    try {
+      const { ensureCsatInvite } = await import('@/lib/helpdeskExtras');
+      await ensureCsatInvite(refreshed.id);
+    } catch (err) {
+      console.error('[helpdesk] csat invite', err);
+    }
   } else {
     await persistSlaBreached(refreshed.id, { ...refreshed, status });
   }
-  return await getHelpdeskTicket(ticket.key);
+  const finalTicket = await getHelpdeskTicket(ticket.key);
+  if (finalTicket) {
+    try {
+      const { fireHelpdeskStatusChanged } = await import('@/lib/webhooks');
+      const { notifyOnHelpdeskEvent } = await import('@/lib/notify');
+      void fireHelpdeskStatusChanged({
+        ticket: finalTicket,
+        fromStatus,
+        toStatus: status,
+      });
+      void notifyOnHelpdeskEvent({
+        kind: 'status',
+        ticket: finalTicket,
+        fromStatus,
+        toStatus: status,
+      });
+    } catch (err) {
+      console.error('[helpdesk] status side-effects', err);
+    }
+  }
+  return finalTicket;
 }
 
 export async function assignHelpdeskTicket(
@@ -609,14 +652,27 @@ export async function addHelpdeskNote(ticketKey: string, authorId: number, body:
   const text = body.trim().slice(0, 4000);
   if (!text) return undefined;
   const at = stamp();
-  const result = await qRun(`INSERT INTO helpdesk_notes (ticket_id, author_id, body, created_at) VALUES (?, ?, ?, ?)`, [ticket.id, authorId, text, at]);
+  const noteId = await qInsertReturningId(
+    `INSERT INTO helpdesk_notes (ticket_id, author_id, body, created_at) VALUES (?, ?, ?, ?)`,
+    [ticket.id, authorId, text, at],
+  );
   await qRun('UPDATE helpdesk_tickets SET updated_at = ? WHERE id = ?', [at, ticket.id]);
   if (!ticket.responseMetAt) {
     await markResponseMet(ticket, at);
   } else {
     await persistSlaBreached(ticket.id, ticket);
   }
-  const row = await qGet('SELECT * FROM helpdesk_notes WHERE id = ?', [result]) as Record<string, unknown> | undefined;
+  const row = (await qGet('SELECT * FROM helpdesk_notes WHERE id = ?', [noteId])) as
+    | Record<string, unknown>
+    | undefined;
+  try {
+    const { fireHelpdeskNoteAdded } = await import('@/lib/webhooks');
+    const { notifyOnHelpdeskEvent } = await import('@/lib/notify');
+    void fireHelpdeskNoteAdded({ ticket, authorId, body: text });
+    void notifyOnHelpdeskEvent({ kind: 'note', ticket, authorId, body: text });
+  } catch (err) {
+    console.error('[helpdesk] note side-effects', err);
+  }
   return row ? mapNote(row) : undefined;
 }
 

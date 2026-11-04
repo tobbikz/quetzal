@@ -338,6 +338,68 @@ function mentionedIssueKeys(body: string): string[] {
   return [...new Set(matches)];
 }
 
+type HelpdeskNotifyTicket = {
+  id: number;
+  key: string;
+  summary: string;
+  status: string;
+  assigneeId: number | null;
+  requesterId: number;
+};
+
+/** Fan-out for helpdesk lifecycle — never throws into ticket paths. */
+export async function notifyOnHelpdeskEvent(input: {
+  kind: 'created' | 'status' | 'note';
+  ticket: HelpdeskNotifyTicket;
+  fromStatus?: string;
+  toStatus?: string;
+  authorId?: number;
+  body?: string;
+}): Promise<void> {
+  try {
+    const href = `/helpdesk/${input.ticket.key}`;
+    const recipients = new Set<number>();
+    if (input.ticket.assigneeId) recipients.add(input.ticket.assigneeId);
+    if (input.ticket.requesterId) recipients.add(input.ticket.requesterId);
+    if (input.authorId) recipients.delete(input.authorId);
+
+    let title = `${input.ticket.key}: ${input.ticket.summary}`;
+    let body = '';
+    if (input.kind === 'created') {
+      title = `New helpdesk ${input.ticket.key}`;
+      body = input.ticket.summary;
+    } else if (input.kind === 'status') {
+      title = `${input.ticket.key} → ${input.toStatus ?? input.ticket.status}`;
+      body = input.fromStatus
+        ? `Status changed from ${input.fromStatus} to ${input.toStatus}`
+        : `Status is now ${input.toStatus}`;
+    } else {
+      title = `Note on ${input.ticket.key}`;
+      body = snippet(input.body ?? '', 160);
+    }
+
+    for (const userId of recipients) {
+      await notifyUser({
+        userId,
+        kind: `helpdesk_${input.kind}`,
+        title,
+        body,
+        href,
+      });
+    }
+
+    // Mirror to Teams when configured (best-effort).
+    try {
+      const { postTeamsMessage } = await import('@/lib/connectors');
+      await postTeamsMessage([title, body, absoluteHref(href)].filter(Boolean).join('\n'));
+    } catch (err) {
+      console.error('[notify:teams]', err);
+    }
+  } catch (err) {
+    console.error('[notifyOnHelpdeskEvent]', err);
+  }
+}
+
 /** Fan-out after addComment — never throws into the comment path. */
 export async function notifyOnIssueComment(issue: Issue, authorId: number, body: string): Promise<void> {
   try {

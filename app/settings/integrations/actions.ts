@@ -2,6 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { saveConnectors } from '@/lib/connectors';
+import { getNotifyChannelSettings, saveNotifyChannelSettings } from '@/lib/notify';
+import { requireUser } from '@/lib/session';
 import {
   createWebhook,
   deleteWebhook,
@@ -9,8 +12,6 @@ import {
   WEBHOOK_EVENTS,
   type WebhookEvent,
 } from '@/lib/webhooks';
-import { getNotifyChannelSettings, saveNotifyChannelSettings } from '@/lib/notify';
-import { requireUser } from '@/lib/session';
 
 function text(value: FormDataEntryValue | null, max = 2000): string {
   return String(value ?? '').trim().slice(0, max);
@@ -85,4 +86,29 @@ export async function saveSlackConnectorAction(formData: FormData): Promise<void
   revalidatePath('/settings/integrations');
   revalidatePath('/settings/notifications');
   redirect('/settings/integrations?saved=slack');
+}
+
+export async function saveConnectorsAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const githubEnabled =
+    formData.get('github_enabled') === 'on' || formData.get('github_enabled') === '1';
+  const teamsEnabled =
+    formData.get('teams_enabled') === 'on' || formData.get('teams_enabled') === '1';
+  const emailInboundEnabled =
+    formData.get('email_inbound_enabled') === 'on' ||
+    formData.get('email_inbound_enabled') === '1';
+  const rotateEmailToken =
+    formData.get('rotate_email_token') === 'on' || formData.get('rotate_email_token') === '1';
+  const githubSecret = text(formData.get('github_webhook_secret'), 200);
+  await saveConnectors({
+    githubEnabled,
+    githubWebhookSecret: githubSecret || undefined,
+    updateGithubSecret: githubSecret.length > 0 || formData.get('clear_github_secret') === '1',
+    teamsEnabled,
+    teamsWebhookUrl: text(formData.get('teams_webhook_url'), 2000),
+    emailInboundEnabled,
+    rotateEmailToken,
+  });
+  revalidatePath('/settings/integrations');
+  redirect('/settings/integrations?saved=connectors');
 }
