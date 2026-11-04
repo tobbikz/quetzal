@@ -22,24 +22,35 @@ export function LoginForm({
 
   return (
     <div className="login-form-pane">
-      <h1 className="login-title">Log in</h1>
-      {error ? <p className="login-error">Check email and password, then try again.</p> : null}
+      <header className="login-form-head">
+        <h1 className="login-title">Sign in</h1>
+        <p className="login-lead">Welcome back. Enter your details below.</p>
+      </header>
+
+      {error ? (
+        <p className="login-error">Check email/username and password, then try again.</p>
+      ) : null}
 
       <form action={loginAction} className="login-form">
         {next ? <input type="hidden" name="next" value={next} /> : null}
         <label className="login-field">
-          <span>Email</span>
+          <span>Email or username</span>
           <input
-            type="email"
+            type="text"
             name="email"
             autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             required
-            placeholder="ana@example.com"
-            defaultValue="ana@example.com"
+            placeholder="tomy.berrios or you@company.com"
+            defaultValue="tomy.berrios"
           />
         </label>
         <label className="login-field">
-          <span>Password</span>
+          <span className="login-field-row">
+            <span>Password</span>
+          </span>
           <span className="login-password-wrap">
             <input
               type={showPassword ? 'text' : 'password'}
@@ -47,7 +58,6 @@ export function LoginForm({
               autoComplete="current-password"
               required
               placeholder="Password"
-              defaultValue="quetzal"
             />
             <button
               type="button"
@@ -70,36 +80,23 @@ export function LoginForm({
             </button>
           </span>
         </label>
-        <button className="login-submit" type="submit">Log in</button>
+        <button className="login-submit" type="submit">
+          Sign in
+        </button>
       </form>
 
       {ssoEnabled ? (
         <>
-          <div className="login-divider"><span>or</span></div>
+          <div className="login-divider">
+            <span>or</span>
+          </div>
           <a className="login-sso" href={ssoHref}>
             Sign in with SSO
           </a>
-          <p className="login-passkey-note">
-            SSO hub: OIDC auth-code when configured, plus SAML ACS (signature verify if metadata has
-            X509Certificate; otherwise labeled demo). Password login still works.
-          </p>
         </>
       ) : null}
 
-      <div className="login-divider"><span>or</span></div>
-
-      <button type="button" className="login-passkey" disabled title="Passkeys come later">
-        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="7.5" cy="15.5" r="5.5" />
-          <path d="m21 2-9.6 9.6" />
-          <path d="m15.5 7.5 3 3L22 7l-3-3" />
-        </svg>
-        Continue with passkey
-      </button>
-      <p className="login-passkey-note">
-        Local accounts use a password. LDAP and SSO work when enabled in Settings.
-        Seeded demo password: <code>quetzal</code>.
-      </p>
+      <p className="login-foot">Local admin sign-in for this desk.</p>
 
       {quickLogin ? (
         <div id="demo" className="login-quick">

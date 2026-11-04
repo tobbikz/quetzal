@@ -652,9 +652,13 @@ async function compileCmp(cmp: JqlCmp, ctx: JqlContext): Promise<SqlPiece> {
       const args: Array<string | number | null> = [];
       for (const item of value.items) {
         if (item.kind !== 'literal') throw new Error('labels IN expects text');
-        const label = item.text.trim().toLowerCase().replace(/\s+/g, '');
-        parts.push(`(',' || lower(replace(i.labels, ' ', '')) || ',') LIKE ?`);
-        args.push(`%,${label},%`);
+        const label = item.text.trim().toLowerCase();
+        parts.push(`EXISTS (
+          SELECT 1 FROM issue_labels il
+          JOIN labels l ON l.id = il.label_id
+          WHERE il.issue_id = i.id AND l.name_norm = ?
+        )`);
+        args.push(label);
       }
       return { sql: `(${parts.join(' OR ')})`, args };
     }
@@ -705,11 +709,22 @@ async function compileCmp(cmp: JqlCmp, ctx: JqlContext): Promise<SqlPiece> {
     if (value.kind !== 'literal') throw new Error('labels expects text');
     const label = value.text.trim().toLowerCase();
     if (op === '~') {
-      return { sql: 'lower(i.labels) LIKE ?', args: [`%${label}%`] };
+      return {
+        sql: `EXISTS (
+          SELECT 1 FROM issue_labels il
+          JOIN labels l ON l.id = il.label_id
+          WHERE il.issue_id = i.id AND l.name_norm LIKE ?
+        )`,
+        args: [`%${label}%`],
+      };
     }
     return {
-      sql: `(',' || lower(replace(i.labels, ' ', '')) || ',') LIKE ?`,
-      args: [`%,${label.replace(/\s+/g, '')},%`],
+      sql: `EXISTS (
+        SELECT 1 FROM issue_labels il
+        JOIN labels l ON l.id = il.label_id
+        WHERE il.issue_id = i.id AND l.name_norm = ?
+      )`,
+      args: [label],
     };
   }
   if (field === 'created') {

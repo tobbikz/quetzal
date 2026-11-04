@@ -6,6 +6,7 @@ import { logoutAction } from '@/app/actions';
 import { CommandMenuTrigger } from '@/components/CommandMenu';
 import { NewIssueButton } from '@/components/CreateIssue';
 import { NotificationBell } from '@/components/NotificationBell';
+import { ProjectSwitch } from '@/components/ProjectSwitch';
 import { canAccessHelpdeskDesk, canManageAutomation } from '@/lib/capabilities';
 import type { Notification, Space, User } from '@/lib/types';
 
@@ -35,12 +36,16 @@ export function Navbar({
   teamSpaces: _teamSpaces,
   notifications,
   unreadCount,
+  projects = [],
+  currentProjectKey,
 }: {
   user: User;
   personalSpace: Space;
   teamSpaces: Space[];
   notifications: Notification[];
   unreadCount: number;
+  projects?: { key: string; name: string }[];
+  currentProjectKey?: string;
 }) {
   const path = usePathname();
   const wiki = path.startsWith('/wiki') || path.startsWith('/search');
@@ -55,6 +60,10 @@ export function Navbar({
     path.startsWith('/dashboards') ||
     path.startsWith('/wiki') ||
     path.startsWith('/search');
+  const projectValue =
+    currentProjectKey && projects.some((p) => p.key === currentProjectKey)
+      ? currentProjectKey
+      : projects[0]?.key ?? '';
 
   return (
     <header className="navbar navbar--e">
@@ -63,6 +72,9 @@ export function Navbar({
           <span className="brand-mark">Q</span>
           <span className="brand-name">Quetzal</span>
         </Link>
+        {projects.length > 0 && projectValue ? (
+          <ProjectSwitch projects={projects} value={projectValue} next={path || '/'} variant="navbar" />
+        ) : null}
       </div>
       <div className="navbar-split" aria-hidden />
       <nav className="nav-rail" aria-label="Primary">

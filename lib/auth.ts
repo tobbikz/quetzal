@@ -1,6 +1,7 @@
 import {
   ensureUserByEmail,
   getUserAuthByEmail,
+  getUserAuthByLogin,
   setUserAuthSource,
   type UserAuthRecord,
 } from '@/lib/db';
@@ -24,23 +25,25 @@ function toUser(row: UserAuthRecord): User {
 
 /**
  * Local password first when a hash exists; otherwise LDAP when enabled.
+ * Accepts full email or username (LDAP sAMAccountName / local-part).
  * JIT-provisions LDAP users as local mirrors (auth_source=ldap, no password hash).
  */
 export async function authenticatePassword(
-  email: string,
+  emailOrUser: string,
   password: string,
 ): Promise<AuthResult> {
-  const normalized = email.trim().toLowerCase();
+  const normalized = emailOrUser.trim().toLowerCase();
   if (!normalized || !password) return { ok: false, reason: 'invalid' };
 
-  const existing = await getUserAuthByEmail(normalized);
+  const existing = await getUserAuthByLogin(normalized);
   if (existing?.disabled) return { ok: false, reason: 'disabled' };
 
   if (existing?.authSource === 'local' && existing.passwordHash) {
     if (verifyPassword(password, existing.passwordHash)) {
       return { ok: true, user: toUser(existing), via: 'local' };
     }
-    return { ok: false, reason: 'invalid' };
+    // Wrong local password — do not fall through to LDAP for the same account.
+    if (existing.authSource === 'local') return { ok: false, reason: 'invalid' };
   }
 
   const ldap = await getLdapSettings();

@@ -18,20 +18,37 @@ export default async function LoginPage({
 
   return (
     <div className="login-page">
-      <div className="login-shell">
-        <header className="login-top">
-          <Link href="/login" className="login-brand" aria-label="Quetzal">
-            <span className="login-brand-mark">Q</span>
-          </Link>
-          <span className="login-top-link">Work tracker + wiki</span>
-        </header>
+      <div className="login-atmosphere" aria-hidden="true">
+        <span className="login-aurora" />
+        <span className="login-blob login-blob--a" />
+        <span className="login-blob login-blob--b" />
+        <span className="login-blob login-blob--c" />
+        <span className="login-blob login-blob--d" />
+        <span className="login-grid" />
+        <span className="login-orbit login-orbit--1" />
+        <span className="login-orbit login-orbit--2" />
+        <span className="login-orbit login-orbit--3" />
+        <span className="login-sheen" />
+      </div>
 
-        <div className="login-card">
+      <div className="login-card">
+        <aside className="login-visual">
+          <Link href="/login" className="login-visual-brand" aria-label="Quetzal home">
+            Quetzal
+          </Link>
+          <div className="login-visual-copy">
+            <h2 className="login-visual-title">An ops atelier.</h2>
+            <p className="login-visual-sub">Issues, wiki, and helpdesk — one quiet desk.</p>
+          </div>
+        </aside>
+
+        <div className="login-stage">
           {devEscapes ? (
-            <p className="muted" style={{ marginBottom: '0.75rem', color: 'var(--danger, #b91c1c)' }}>
+            <p className="login-dev-warn">
               Dev auth escapes are on (demo/quick login). Never enable these in production.
             </p>
           ) : null}
+
           <LoginForm
             people={people}
             next={next}
@@ -39,33 +56,6 @@ export default async function LoginPage({
             ssoEnabled={ssoEnabled}
             quickLogin={quickLoginAllowed()}
           />
-
-          <aside className="login-promo">
-            <h2>Ship work together.</h2>
-            <p>
-              Issues, wiki spaces, and the activity that keeps the team aligned — one Quetzal desk for
-              product and ops.
-            </p>
-            <div className="login-invite">
-              <code>quetzal.local/invite/ops</code>
-              <button type="button" className="login-copy" disabled title="Demo">
-                Copy
-              </button>
-            </div>
-            <div className="login-promo-art" aria-hidden="true">
-              <div className="login-promo-tile">
-                <span>Issues</span>
-                <strong>For you</strong>
-              </div>
-              <div className="login-promo-tile alt">
-                <span>Wiki</span>
-                <strong>Spaces</strong>
-              </div>
-            </div>
-            <p className="login-promo-foot">
-              Demo: ana@example.com / quetzal · LDAP when enabled in Settings
-            </p>
-          </aside>
         </div>
       </div>
     </div>

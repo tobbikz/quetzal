@@ -69,6 +69,8 @@ export function AppShell({
         teamSpaces={teamSpaces}
         notifications={notifications}
         unreadCount={unreadCount}
+        projects={projects.map((p) => ({ key: p.key, name: p.name }))}
+        currentProjectKey={defaultProject}
       />
       {children}
     </CommandMenuHost>

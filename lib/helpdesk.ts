@@ -230,29 +230,9 @@ async function backfillMissingSlaDues(): Promise<void> {
   }
 }
 
-/** Create helpdesk tables and seed demo tickets if empty. */
+/** Seed SLA policies + agent flags. Schema columns come from migrations (no runtime ALTER). */
 export async function ensureHelpdesk(): Promise<void> {
-  /* DDL skipped */ void 0;
-
-  for (const ddl of [
-    `ALTER TABLE helpdesk_tickets ADD COLUMN priority TEXT NOT NULL DEFAULT 'medium'`,
-    `ALTER TABLE helpdesk_tickets ADD COLUMN labels TEXT NOT NULL DEFAULT ''`,
-    `ALTER TABLE helpdesk_tickets ADD COLUMN due TEXT`,
-    `ALTER TABLE helpdesk_tickets ADD COLUMN response_due TEXT`,
-    `ALTER TABLE helpdesk_tickets ADD COLUMN resolve_due TEXT`,
-    `ALTER TABLE helpdesk_tickets ADD COLUMN response_met_at TEXT`,
-    `ALTER TABLE helpdesk_tickets ADD COLUMN resolve_met_at TEXT`,
-    `ALTER TABLE helpdesk_tickets ADD COLUMN sla_breached INTEGER NOT NULL DEFAULT 0`,
-    `ALTER TABLE users ADD COLUMN helpdesk_agent BOOLEAN NOT NULL DEFAULT FALSE`,
-  ]) {
-    try {
-      await qRun(ddl);
-    } catch {
-      /* column already exists */
-    }
-  }
-
-  /* Seed agents: Ana (admin) + Luis (member) for local demos. */
+  /* Seed agents: Ana (admin) + Luis (member) for local demos; also any admin. */
   try {
     await qRun(
       `UPDATE users SET helpdesk_agent = TRUE WHERE email IN (?, ?) OR role = 'admin'`,
@@ -281,6 +261,16 @@ export async function ensureHelpdesk(): Promise<void> {
   const count = await qGet('SELECT COUNT(*) AS n FROM helpdesk_tickets') as { n: number };
   if (count.n > 0) {
     await backfillMissingSlaDues();
+    return;
+  }
+
+  // Demo HD tickets are for local empty-db demos only — never re-seed in production
+  // or when explicitly disabled (personal desks / wiped DBs).
+  if (
+    process.env.NODE_ENV === 'production' ||
+    process.env.QUETZAL_SEED_HELPDESK === '0' ||
+    process.env.QUETZAL_DEMO_AUTH === '0'
+  ) {
     return;
   }
 
@@ -517,7 +507,8 @@ export async function createHelpdeskTicket(input: {
   const priority = isPriority(String(input.priority ?? '')) ? (input.priority as HelpdeskPriority) : 'medium';
   const summary = input.summary.trim().slice(0, 180) || 'Untitled request';
   const body = (input.body ?? '').trim().slice(0, 50000);
-  const labels = (input.labels ?? '').trim().slice(0, 200);
+  const { joinLabelCsv, syncHelpdeskTicketLabels } = await import('@/lib/labels');
+  const labels = joinLabelCsv([(input.labels ?? '').trim().slice(0, 200)]);
   const due = input.due?.trim() ? input.due.trim().slice(0, 32) : null;
   const at = stamp();
   const next = (
@@ -561,9 +552,9 @@ export async function createHelpdeskTicket(input: {
       responseMetAt,
       breached,
       input.siteId ?? null,]);
+  await syncHelpdeskTicketLabels(result, labels);
   let ticket = await getHelpdeskTicket(key);
   if (!ticket) throw new Error(`Failed to create helpdesk ticket ${key}`);
-  void result;
   try {
     const { runHelpdeskCreateAutomation } = await import('@/lib/helpdeskAutomation');
     ticket = await runHelpdeskCreateAutomation(ticket);
