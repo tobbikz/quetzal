@@ -182,7 +182,8 @@ export default async function IntegrationsSettingsPage({
             <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
               POST to <code>/api/integrations/github</code> with{' '}
               <code>X-Hub-Signature-256</code> when a secret is set. Opens/closes issues &amp; PRs
-              and mirrors comments into the default project.
+              and mirrors comments into the default project. Outbound Quetzal → GitHub comments need{' '}
+              <code>QUETZAL_GITHUB_TOKEN</code> (see <code>docs/go-live.md</code>).
             </p>
             <label className="field">
               <span>Default project key</span>

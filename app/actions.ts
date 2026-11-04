@@ -608,7 +608,25 @@ export async function addCommentAction(formData: FormData): Promise<void> {
   const jar = await cookies();
   const key = text(formData.get('key'), 20).toUpperCase();
   const authorId = Number(jar.get('quetzal_uid')?.value) || 1;
-  await addComment(key, authorId, text(formData.get('body'), 8000), optionalId(formData.get('parent')));
+  const body = text(formData.get('body'), 8000);
+  await addComment(key, authorId, body, optionalId(formData.get('parent')));
+  const postGithub =
+    formData.get('post_to_github') === 'on' || formData.get('post_to_github') === '1';
+  if (postGithub && body) {
+    try {
+      const { postGithubComment } = await import('@/lib/githubOutbound');
+      const plain = body
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .trim();
+      const result = await postGithubComment(key, plain || body);
+      if (!result.ok) console.warn('[github outbound]', result.reason);
+    } catch (err) {
+      console.error('[github outbound]', err);
+    }
+  }
   revalidatePath('/');
   revalidatePath('/notifications');
   const tab = text(formData.get('tab'), 20);

@@ -12,6 +12,7 @@ export function CommentComposer({
   submitLabel,
   mentions,
   openLabel = 'Add a comment',
+  githubMirror = false,
 }: {
   action: Action;
   fields: { name: string; value: string }[];
@@ -19,6 +20,7 @@ export function CommentComposer({
   submitLabel: string;
   mentions: string[];
   openLabel?: string;
+  githubMirror?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   if (!open) {
@@ -36,6 +38,7 @@ export function CommentComposer({
       submitLabel={submitLabel}
       mentions={mentions}
       onCancel={() => setOpen(false)}
+      githubMirror={githubMirror}
     />
   );
 }

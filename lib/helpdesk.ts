@@ -561,9 +561,15 @@ export async function createHelpdeskTicket(input: {
       responseMetAt,
       breached,
       input.siteId ?? null,]);
-  const ticket = await getHelpdeskTicket(key);
+  let ticket = await getHelpdeskTicket(key);
   if (!ticket) throw new Error(`Failed to create helpdesk ticket ${key}`);
   void result;
+  try {
+    const { runHelpdeskCreateAutomation } = await import('@/lib/helpdeskAutomation');
+    ticket = await runHelpdeskCreateAutomation(ticket);
+  } catch (err) {
+    console.error('[helpdesk] create automation', err);
+  }
   try {
     const { fireHelpdeskCreated } = await import('@/lib/webhooks');
     const { notifyOnHelpdeskEvent } = await import('@/lib/notify');
@@ -592,6 +598,11 @@ export async function setHelpdeskStatus(key: string, status: HelpdeskStatus): Pr
     try {
       const { ensureCsatInvite } = await import('@/lib/helpdeskExtras');
       await ensureCsatInvite(refreshed.id);
+      const afterInvite = await getHelpdeskTicket(ticket.key);
+      if (afterInvite) {
+        const { runHelpdeskResolveAutomation } = await import('@/lib/helpdeskAutomation');
+        void runHelpdeskResolveAutomation(afterInvite);
+      }
     } catch (err) {
       console.error('[helpdesk] csat invite', err);
     }

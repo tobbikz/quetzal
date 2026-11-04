@@ -31,8 +31,9 @@ Not Atlassian, and **not** the Hacienda / facturación “Quetzal FE” product.
 - Settings → Integrations: outbound issue/helpdesk webhooks, Slack, Teams, GitHub receiver, email inbound
 - Helpdesk: macros, CSAT (`/csat/<token>`), email inbound API
 - Settings → LDAP: directory bind + JIT local mirror users
-- Ops notes: `docs/ops-auth-integrations.md`
+- Ops notes: `docs/ops-auth-integrations.md` · go-live: `docs/go-live.md`
 - Notifications: SMTP + Slack (`QUETZAL_SMTP_*`, `QUETZAL_SLACK_WEBHOOK`)
+- GitHub: inbound webhook sync + optional outbound comments (`QUETZAL_GITHUB_TOKEN`)
 - SSO: SAML ACS + OIDC
 - Admin → Users: create local accounts, reset passwords, disable users
 
@@ -106,6 +107,6 @@ docker compose exec -T db \
 
 (Requires `db/migrations/001_init.sql` from the Postgres DDL ticket.)
 
-## Not in this version
+## Go-live
 
-Custom workflows, a query language, permission schemes, attachments, email notifications, and macros. Those are the next layer, not a coat of paint on the seed data.
+See [`docs/go-live.md`](docs/go-live.md) for env secrets, backups, cron (`/api/automation/tick`), and smoke checks.

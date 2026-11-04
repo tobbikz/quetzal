@@ -2,12 +2,13 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { canManageAutomation } from '@/lib/acl';
 import { tickDueApproaching } from '@/lib/automation';
+import { tickHelpdeskSlaBreaches } from '@/lib/helpdeskAutomation';
 import { currentUser } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Cron / schedule runner for `due_approaching` automation rules.
+ * Cron / schedule runner for due dates + helpdesk SLA breach alerts.
  *
  * Auth (either):
  * - `Authorization: Bearer $QUETZAL_AUTOMATION_CRON_SECRET` when the env var is set
@@ -41,11 +42,11 @@ export async function POST(request: Request) {
     }
   }
 
-  const result = await tickDueApproaching();
+  const [due, helpdesk] = await Promise.all([tickDueApproaching(), tickHelpdeskSlaBreaches()]);
   return NextResponse.json({
     ok: true,
-    trigger: 'due_approaching',
-    ...result,
+    due_approaching: due,
+    helpdesk_sla: helpdesk,
     at: new Date().toISOString(),
   });
 }

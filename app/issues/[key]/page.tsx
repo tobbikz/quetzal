@@ -45,6 +45,7 @@ import { listComponents, listVersions } from '@/lib/versions';
 import { getIssueCustomValues } from '@/lib/customFields';
 import { ISSUE_LINK_TYPES, listResolvedLinks } from '@/lib/issueLinks';
 import { hasVoted, voteCount } from '@/lib/watchers';
+import { getGithubLinkForIssue, githubOutboundReady } from '@/lib/githubOutbound';
 import { LiveCustomField } from '@/components/LiveCustomField';
 import { GateBanner, humanizeGateMessage } from '@/components/GateBanner';
 import { redirect } from 'next/navigation';
@@ -84,6 +85,8 @@ export default async function IssuePage({
   const voted = await hasVoted(issue.id, me.id);
   const votes = await voteCount(issue.id);
   const links = await listResolvedLinks(issue.key);
+  const githubLink = await getGithubLinkForIssue(issue.key);
+  const githubMirror = Boolean(githubLink && githubOutboundReady());
   const spent = worklogs.reduce((sum, entry) => sum + entry.minutes, 0);
   const estimateParts = splitMinutes(issue.originalEstimateMinutes);
   const remainingParts = splitMinutes(issue.remainingMinutes);
@@ -370,6 +373,7 @@ export default async function IssuePage({
                     submitLabel="Comment"
                     mentions={mentions}
                     openLabel="Add a comment"
+                    githubMirror={githubMirror}
                   />
                 )}
                 {tab === 'worklog' && (
@@ -596,6 +600,21 @@ export default async function IssuePage({
                       )}
                     </span>
                   </div>
+                  {githubLink ? (
+                    <div className="idesk-field idesk-field--wide">
+                      <span className="idesk-field-k">GitHub</span>
+                      <span className="idesk-field-v">
+                        <a href={githubLink.htmlUrl} target="_blank" rel="noreferrer">
+                          {githubLink.repoFullName}#{githubLink.githubNumber}
+                        </a>
+                        {!githubOutboundReady() ? (
+                          <span className="muted" style={{ display: 'block', fontSize: '0.8rem' }}>
+                            Set QUETZAL_GITHUB_TOKEN to mirror comments
+                          </span>
+                        ) : null}
+                      </span>
+                    </div>
+                  ) : null}
                   {customValues.map((item) => (
                     <div key={item.fieldId} className="idesk-field idesk-field--wide">
                       <span className="idesk-field-k">{item.field.name}</span>

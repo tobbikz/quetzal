@@ -59,6 +59,7 @@ export function CommentBox({
   submitLabel,
   mentions,
   onCancel,
+  githubMirror = false,
 }: {
   action: Action;
   fields: { name: string; value: string }[];
@@ -66,6 +67,8 @@ export function CommentBox({
   submitLabel: string;
   mentions: string[];
   onCancel?: () => void;
+  /** When true, offer “Also post to GitHub” for linked issues. */
+  githubMirror?: boolean;
 }) {
   const [html, setHtml] = useState('<p></p>');
   const [open, setOpen] = useState<'emoji' | 'mention' | null>(null);
@@ -305,6 +308,12 @@ export function CommentBox({
         ) : null}
       </div>
       <input type="hidden" name="body" value={isEmptyHtml(html) ? '' : html} readOnly />
+      {githubMirror ? (
+        <label className="field field--check" style={{ marginTop: '0.35rem' }}>
+          <input type="checkbox" name="post_to_github" value="1" />
+          <span>Also post to GitHub</span>
+        </label>
+      ) : null}
       <div className="composer-foot">
         {onCancel ? (
           <button type="button" className="btn-secondary" onClick={onCancel}>
