@@ -31,9 +31,15 @@ export default async function NewPage({
     template && !templateId
       ? templates.find((item) => item.name.toLowerCase() === template.toLowerCase())
       : undefined;
+  const recommendedFirstPage =
+    pages.length === 0
+      ? templates.find((item) => item.name === 'Runbook') ??
+        templates.find((item) => item.name !== 'Blank')
+      : undefined;
   const chosen =
     (templateId ? await getPageTemplate(templateId) : undefined) ||
     named ||
+    (!template ? recommendedFirstPage : undefined) ||
     templates.find((item) => item.name === 'Blank') ||
     templates[0];
   const defaultLabels = chosen?.name.toLowerCase() === 'blog' ? 'blog' : '';
@@ -68,6 +74,13 @@ export default async function NewPage({
           <span>Templates</span>
         </div>
         <div className="wdesk-panel-body">
+          {pages.length === 0 ? (
+            <p className="muted">
+              {recommendedFirstPage
+                ? `This space is empty. The ${recommendedFirstPage.name} template is a good first page, or choose another below.`
+                : 'This space is empty. Choose a template below to create the first page.'}
+            </p>
+          ) : null}
           <div className="wdesk-templates">
             {templates.map((item) => {
               const active = chosen?.id === item.id;
