@@ -44,9 +44,22 @@ SQL
 done
 
 if [ -f /seed.sql ]; then
-  echo "[migrate] seed /seed.sql"
-  psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f /seed.sql || \
-    echo "[migrate] seed finished with warnings (ok if re-run)"
+  seed_id="seed.sql"
+  seeded=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -Atc \
+    "SELECT 1 FROM quetzal.schema_migrations WHERE id = '$seed_id'")
+  if [ "$seeded" = "1" ]; then
+    echo "[migrate] skip $seed_id"
+  else
+    echo "[migrate] seed /seed.sql"
+    if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f /seed.sql; then
+      psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -c \
+        "INSERT INTO quetzal.schema_migrations (id) VALUES ('$seed_id') ON CONFLICT DO NOTHING"
+    else
+      echo "[migrate] seed finished with warnings — marking applied"
+      psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -c \
+        "INSERT INTO quetzal.schema_migrations (id) VALUES ('$seed_id') ON CONFLICT DO NOTHING"
+    fi
+  fi
 fi
 
 echo "[migrate] done"

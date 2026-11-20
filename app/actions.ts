@@ -199,11 +199,12 @@ export async function setUserAction(formData: FormData): Promise<void> {
 }
 
 export async function loginAction(formData: FormData): Promise<void> {
-  const email = text(formData.get('email'), 120).toLowerCase();
+  // Accept full email or username (LDAP / local-part); do not require '@'.
+  const login = text(formData.get('email'), 120).toLowerCase();
   const password = text(formData.get('password'), 120);
   const jar = await cookies();
   const { authenticatePassword } = await import('@/lib/auth');
-  const result = await authenticatePassword(email, password);
+  const result = await authenticatePassword(login, password);
 
   if (!result.ok) {
     redirect('/login?error=1');

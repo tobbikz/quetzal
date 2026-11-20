@@ -278,6 +278,34 @@ export async function getUserAuthByEmail(email: string): Promise<UserAuthRecord 
   return row ? mapUserAuth(row) : undefined;
 }
 
+/**
+ * Resolve a login identifier: full email, or username / local-part
+ * (e.g. `tomy.berrios` matches `tomy.berrios` or `tomy.berrios@company.com`).
+ */
+export async function getUserAuthByLogin(login: string): Promise<UserAuthRecord | undefined> {
+  await ensureAuthColumns();
+  const normalized = login.trim().toLowerCase();
+  if (!normalized) return undefined;
+
+  const exact = (await qGet('SELECT * FROM users WHERE lower(email) = ? LIMIT 1', [normalized])) as
+    | Record<string, unknown>
+    | undefined;
+  if (exact) return mapUserAuth(exact);
+
+  if (normalized.includes('@')) return undefined;
+
+  // Username / LDAP sAMAccountName → match stored email local-part.
+  const byLocal = (await qGet(
+    `SELECT * FROM users
+      WHERE lower(email) LIKE ?
+        AND position('@' in email) > 0
+        AND lower(split_part(email, '@', 1)) = ?
+      LIMIT 1`,
+    [`${normalized}@%`, normalized],
+  )) as Record<string, unknown> | undefined;
+  return byLocal ? mapUserAuth(byLocal) : undefined;
+}
+
 export async function getUserAuth(id: number): Promise<UserAuthRecord | undefined> {
   await ensureAuthColumns();
   const row = (await qGet('SELECT * FROM users WHERE id = ?', [id])) as
@@ -499,15 +527,25 @@ export async function listIssues(query: IssueQuery = {}): Promise<Issue[]> {
     args.push(query.reporterId);
   }
   if (query.q) {
-    where.push('(i.summary LIKE ? OR i.description LIKE ? OR i.labels LIKE ?)');
-    const like = `%${query.q}%`;
-    args.push(like, like, like);
+    const q = query.q.trim();
+    if (q) {
+      // Prefer FTS (014 search_tsv); keep ILIKE for substring / non-stemmed tokens.
+      where.push(
+        `(i.search_tsv @@ plainto_tsquery('english', ?) OR i.summary ILIKE ? OR i.description ILIKE ? OR i.labels ILIKE ?)`,
+      );
+      const like = `%${q}%`;
+      args.push(q, like, like, like);
+    }
   }
   if (query.label) {
-    const label = query.label.trim().toLowerCase().replace(/\s+/g, '');
+    const label = query.label.trim().toLowerCase();
     if (label) {
-      where.push(`(',' || lower(replace(i.labels, ' ', '')) || ',') LIKE ?`);
-      args.push(`%,${label},%`);
+      where.push(`EXISTS (
+        SELECT 1 FROM issue_labels il
+        JOIN labels l ON l.id = il.label_id
+        WHERE il.issue_id = i.id AND l.name_norm = ?
+      )`);
+      args.push(label);
     }
   }
   if (query.sprintId === 'backlog') {
@@ -618,6 +656,8 @@ export async function createIssue(input: {
   }
 
   const nextNum = Math.max(project.next_num, num + 1);
+  const { joinLabelCsv, syncIssueLabels } = await import('@/lib/labels');
+  const labelsCsv = joinLabelCsv(input.labels ? [input.labels] : []);
   await qRun('UPDATE projects SET next_num = ? WHERE id = ?', [nextNum, project.id]);
   await qRun(`
     INSERT INTO issues (
@@ -635,12 +675,13 @@ export async function createIssue(input: {
     input.sprintId,
     parent?.id ?? null,
     input.points,
-    input.labels,
+    labelsCsv,
     input.dueOn && input.dueOn.trim() !== '' ? input.dueOn : null,
     stamp,
     stamp]);
   const created = await getIssue(`${project.key}-${num}`);
   if (!created) throw new Error(`Failed to create issue ${project.key}-${num}`);
+  await syncIssueLabels(created.id, labelsCsv);
   try {
     const { runAutomations } = require('./automation') as typeof import('./automation');
     await runAutomations({
@@ -679,6 +720,8 @@ export async function updateIssue(
     patch.status === issue.status || (await canApplyTransition(issue, patch.status)).ok
       ? patch.status
       : issue.status;
+  const { joinLabelCsv, syncIssueLabels } = await import('@/lib/labels');
+  const labelsCsv = joinLabelCsv(patch.labels ? [patch.labels] : []);
   await qRun(`
     UPDATE issues SET
       summary = ?, description = ?, status = ?, priority = ?, type = ?,
@@ -692,11 +735,12 @@ export async function updateIssue(
     patch.assigneeId,
     patch.sprintId,
     patch.points,
-    patch.labels,
+    labelsCsv,
     patch.dueOn && patch.dueOn.trim() !== '' ? patch.dueOn : null,
     now(),
     issue.id,
   ]);
+  await syncIssueLabels(issue.id, labelsCsv);
   const sprintName = async (id: number | null) => (id == null ? 'Backlog' : (await getSprint(id))?.name ?? 'Backlog');
   const changes: [string, string, string][] = [
     ['summary', issue.summary, patch.summary],
@@ -707,7 +751,7 @@ export async function updateIssue(
     ['assignee', issue.assigneeId == null ? 'unassigned' : String(issue.assigneeId), patch.assigneeId == null ? 'unassigned' : String(patch.assigneeId)],
     ['sprint', await sprintName(issue.sprintId), await sprintName(patch.sprintId)],
     ['points', issue.points == null ? '' : String(issue.points), patch.points == null ? '' : String(patch.points)],
-    ['labels', issue.labels, patch.labels],
+    ['labels', issue.labels, labelsCsv],
     ['due', issue.dueOn ?? '', patch.dueOn ?? ''],
   ];
   for (const [kind, from, to] of changes) {
@@ -842,15 +886,8 @@ export async function setIssueStatus(key: string, status: IssueStatus, authorId?
 }
 
 export async function labelsInProject(projectId: number): Promise<string[]> {
-  const rows = (await qAll("SELECT labels FROM issues WHERE project_id = ? AND labels != ''", [projectId])) as { labels: string }[];
-  const labels = new Set<string>();
-  for (const row of rows) {
-    for (const part of String(row.labels).split(',')) {
-      const label = part.trim();
-      if (label) labels.add(label);
-    }
-  }
-  return [...labels].sort((a, b) => a.localeCompare(b));
+  const { labelsInProjectNormalized } = await import('@/lib/labels');
+  return labelsInProjectNormalized(projectId);
 }
 
 export async function saveIssueField(key: string, authorId: number | null, field: string, raw: string): Promise<void> {
@@ -948,9 +985,12 @@ export async function saveIssueField(key: string, authorId: number | null, field
     return;
   }
   if (field === 'labels') {
-    if (issue.labels === raw) return;
-    await qRun('UPDATE issues SET labels = ?, updated_at = ? WHERE id = ?', [raw, now(), issue.id]);
-    logActivity(issue.id, authorId, 'labels', `${issue.labels}|${raw}`);
+    const { joinLabelCsv, syncIssueLabels } = await import('@/lib/labels');
+    const next = joinLabelCsv(raw ? [raw] : []);
+    if (issue.labels === next) return;
+    await syncIssueLabels(issue.id, next);
+    await qRun('UPDATE issues SET updated_at = ? WHERE id = ?', [now(), issue.id]);
+    logActivity(issue.id, authorId, 'labels', `${issue.labels}|${next}`);
     return;
   }
   if (field === 'due') {
@@ -1314,15 +1354,38 @@ export async function ensurePersonalSpace(userId: number): Promise<Space> {
   const key = `U${userId}`;
   const stamp = now();
   const hq = await getSiteByKey(DEFAULT_SITE_KEY);
-  await qRun(`INSERT INTO spaces (key, name, description, kind, owner_user_id, site_id) VALUES (?, ?, ?, 'personal', ?, ?)`, [key, `${first}'s space`, 'Notes, drafts, and personal pages.', userId, hq?.id ?? 1]);
-  const spaceRow = await qGet(`SELECT id FROM spaces WHERE key = ? LIMIT 1`, [key]) as { id: number } | undefined;
-  const spaceId = spaceRow?.id ?? 0;
-  await qRun(`INSERT INTO pages (space_id, parent_id, slug, title, body, author_id, updated_at) VALUES (?, NULL, 'overview', ?, ?, ?, ?)`, [spaceId,
-    'Home',
-    `This is ${first}'s personal space. Switch to a team space from the sidebar when you need the handbook or engineering docs.`,
-    userId,
-    stamp]);
-  await addSpaceMember(spaceId, userId);
+  const byKey = (await qGet(`SELECT id, owner_user_id FROM spaces WHERE key = ? LIMIT 1`, [key])) as
+    | { id: number; owner_user_id: number | null }
+    | undefined;
+  if (byKey) {
+    await qRun(`UPDATE spaces SET owner_user_id = ?, name = ?, description = ? WHERE id = ?`, [
+      userId,
+      `${first}'s space`,
+      'Notes, drafts, and personal pages.',
+      byKey.id,
+    ]);
+    await addSpaceMember(byKey.id, userId);
+  } else {
+    await qRun(
+      `INSERT INTO spaces (key, name, description, kind, owner_user_id, site_id) VALUES (?, ?, ?, 'personal', ?, ?)`,
+      [key, `${first}'s space`, 'Notes, drafts, and personal pages.', userId, hq?.id ?? 1],
+    );
+    const spaceRow = (await qGet(`SELECT id FROM spaces WHERE key = ? LIMIT 1`, [key])) as
+      | { id: number }
+      | undefined;
+    const spaceId = spaceRow?.id ?? 0;
+    await qRun(
+      `INSERT INTO pages (space_id, parent_id, slug, title, body, author_id, updated_at) VALUES (?, NULL, 'overview', ?, ?, ?, ?)`,
+      [
+        spaceId,
+        'Home',
+        `This is ${first}'s personal space. Switch to a team space from the sidebar when you need the handbook or engineering docs.`,
+        userId,
+        stamp,
+      ],
+    );
+    await addSpaceMember(spaceId, userId);
+  }
   const ps = await getPersonalSpace(userId);
   if (!ps) throw new Error('Failed to create personal space');
   return ps;
@@ -1330,6 +1393,17 @@ export async function ensurePersonalSpace(userId: number): Promise<Space> {
 
 /** Seed roles + team space membership without locking out existing demos. */
 async function ensureAclSeed(): Promise<void> {
+  // Skip inventing demo users once a real desk is in production / demo auth is off.
+  if (process.env.NODE_ENV === 'production' || process.env.QUETZAL_DEMO_AUTH === '0') {
+    const teams = (await qAll(`SELECT id FROM spaces WHERE kind = 'team'`)) as { id: number }[];
+    const writers = (await qAll(`SELECT id FROM users WHERE role IN ('admin', 'member')`)) as {
+      id: number;
+    }[];
+    for (const space of teams) {
+      for (const user of writers) await addSpaceMember(space.id, user.id);
+    }
+    return;
+  }
   // Keep existing accounts as writers; only invent a demo viewer when missing.
   await qInsertReturningId(`UPDATE users SET role = 'admin' WHERE id = 1 AND role NOT IN ('admin', 'member', 'viewer')`);
   await qRun(`UPDATE users SET role = 'member' WHERE id IN (2, 3) AND role NOT IN ('admin', 'member', 'viewer')`);
@@ -1449,7 +1523,10 @@ export async function addPageComment(spaceKey: string, slug: string, authorId: n
 
 export async function searchAll(q: string): Promise<{ issues: Issue[]; pages: WikiPage[] }> {
   const like = `%${q}%`;
-  const issues = ((await qAll(`${ISSUE_SELECT} WHERE i.summary LIKE ? OR i.description LIKE ? OR i.labels LIKE ? ORDER BY p.key, i.num LIMIT 40`, [like, like, like])) as Record<string, unknown>[]).map(mapIssue);
+  const issues = ((await qAll(
+    `${ISSUE_SELECT} WHERE i.search_tsv @@ plainto_tsquery('english', ?) OR i.summary ILIKE ? OR i.description ILIKE ? OR i.labels ILIKE ? ORDER BY p.key, i.num LIMIT 40`,
+    [q, like, like, like],
+  )) as Record<string, unknown>[]).map(mapIssue);
   const pages = ((await qAll(`${PAGE_SELECT} WHERE pg.title LIKE ? OR pg.body LIKE ? ORDER BY pg.title LIMIT 40`, [like, like])) as Record<string, unknown>[]).map(mapPage);
   return { issues, pages };
 }

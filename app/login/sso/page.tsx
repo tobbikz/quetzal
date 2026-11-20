@@ -35,7 +35,7 @@ export default async function LoginSsoPage({
 }: {
   searchParams: Promise<{ next?: string; error?: string; detail?: string }>;
 }) {
-  if (!await isSsoEnabled()) redirect('/login');
+  if (!(await isSsoEnabled())) redirect('/login');
 
   const params = await searchParams;
   const settings = await getSsoSettings();
@@ -50,17 +50,24 @@ export default async function LoginSsoPage({
 
   return (
     <div className="login-page">
-      <div className="login-shell">
-        <header className="login-top">
-          <Link href="/login" className="login-brand" aria-label="Quetzal">
-            <span className="login-brand-mark">Q</span>
-          </Link>
-          <span className="login-top-link">SSO</span>
-        </header>
+      <div className="login-atmosphere" aria-hidden="true">
+        <span className="login-blob login-blob--a" />
+        <span className="login-blob login-blob--b" />
+        <span className="login-blob login-blob--c" />
+        <span className="login-grid" />
+        <span className="login-sheen" />
+      </div>
 
-        <div className="login-card login-card--solo">
+      <div className="login-card login-card--solo">
+        <div className="login-stage">
           <div className="login-form-pane">
-            <h1 className="login-title">Sign in with SSO</h1>
+            <header className="login-form-head">
+              <Link href="/login" className="login-sso-brand">
+                Quetzal
+              </Link>
+              <h1 className="login-title">Sign in with SSO</h1>
+              <p className="login-lead">Use your identity provider when SSO is enabled.</p>
+            </header>
 
             <div className="sso-demo-banner" role="status">
               {hasCert
@@ -73,7 +80,7 @@ export default async function LoginSsoPage({
 
             {err ? <p className="login-error">{err}</p> : null}
             {params.error === 'oidc_start' && params.detail ? (
-              <p className="login-passkey-note">{params.detail}</p>
+              <p className="login-foot">{params.detail}</p>
             ) : null}
 
             {oidcReady ? (
@@ -97,7 +104,7 @@ export default async function LoginSsoPage({
                   defaultValue="ana@example.com"
                 />
               </label>
-              <p className="login-passkey-note">
+              <p className="login-foot">
                 Posts to {SSO_ACS_PATH}. Real IdPs may POST SAMLResponse instead; with a cert in
                 metadata that path is signature-checked.
               </p>
@@ -106,7 +113,7 @@ export default async function LoginSsoPage({
               </button>
             </form>
 
-            <p className="login-passkey-note" style={{ marginTop: '1rem' }}>
+            <p className="login-foot" style={{ marginTop: '1rem' }}>
               <Link href={next ? `/login?next=${encodeURIComponent(next)}` : '/login'}>
                 Back to password login
               </Link>

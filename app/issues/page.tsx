@@ -3,9 +3,9 @@ import { JqlBar } from '@/components/JqlBar';
 import { ProjectSwitch } from '@/components/ProjectSwitch';
 import { canBrowseIssues } from '@/lib/acl';
 import { JQL_EXAMPLES, runJql } from '@/lib/jql';
-import { projectsForAssignee } from '@/lib/db';
+import { listProjects } from '@/lib/db';
 import { listSavedFilters } from '@/lib/savedFilters';
-import { currentProject, currentUser } from '@/lib/session';
+import { currentProject, currentSite, currentUser } from '@/lib/session';
 import type { Issue } from '@/lib/types';
 
 export default async function IssuesPage({
@@ -18,9 +18,10 @@ export default async function IssuesPage({
   const query = await searchParams;
   const me = await currentUser();
   const project = await currentProject();
+  const site = await currentSite();
   const canBrowse = await canBrowseIssues(me, project.key);
   const savedFilters = await listSavedFilters(me.id);
-  const projects = await projectsForAssignee(me.id);
+  const projects = await listProjects(site.id);
 
   const jqlRaw = (query.jql ?? '').trim();
   const hasQuery = Boolean(jqlRaw);
